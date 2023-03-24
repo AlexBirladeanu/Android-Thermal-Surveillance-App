@@ -95,19 +95,7 @@ void matToBitmap(JNIEnv* env, Mat src, jobject bitmap, jboolean needPremultiplyA
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_flip(
-        JNIEnv* env,
-        jobject p_this,
-        jobject bitmapIn,
-        jobject bitmapOut) {
-    Mat src;
-    bitmapToMat(env, bitmapIn, src, false);
-    myFlip(src);
-    matToBitmap(env, src, bitmapOut, false);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_cannyEdgeDetection(
+Java_com_example_imageeditor_NativeMethodsProvider_color2Grayscale(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
@@ -115,12 +103,12 @@ Java_com_example_imageeditor_NativeMethodsProvider_cannyEdgeDetection(
     Mat src;
     bitmapToMat(env, bitmapIn, src, false);
     Mat dst;
-    dst = cannyEdgeDetection(src);
+    dst = color2Grayscale(src);
     matToBitmap(env, dst, bitmapOut, false);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_color2BW(
+Java_com_example_imageeditor_NativeMethodsProvider_enhanceContrast(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
@@ -128,35 +116,22 @@ Java_com_example_imageeditor_NativeMethodsProvider_color2BW(
     Mat src;
     bitmapToMat(env, bitmapIn, src, false);
     Mat dst;
-    dst = color2BW(src);
+    dst = enhanceContrast(src);
     matToBitmap(env, dst, bitmapOut, false);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_grayscaleSegmentation(
+Java_com_example_imageeditor_NativeMethodsProvider_backgroundSegmentation(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
+        int method,
+        jboolean enableReset,
         jobject bitmapOut) {
     Mat src;
     bitmapToMat(env, bitmapIn, src, false);
     Mat dst;
-    dst = grayscale_segmentation(src);
-    matToBitmap(env, dst, bitmapOut, false);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_regionGrowingSegmentation(
-        JNIEnv* env,
-        jobject p_this,
-        int seedPointX,
-        int seedPointY,
-        jobject bitmapIn,
-        jobject bitmapOut) {
-    Mat src;
-    bitmapToMat(env, bitmapIn, src, false);
-    Mat dst;
-    dst = region_growing_segmentation(seedPointX, seedPointY, src);
+    dst = background_segmentation(src, method, enableReset);
     matToBitmap(env, dst, bitmapOut, false);
 }
 

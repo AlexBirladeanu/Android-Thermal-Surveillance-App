@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.imageeditor.databinding.ActivityMainBinding
+import com.example.imageeditor.fragments.MainFragment
 
 class MainActivity : AppCompatActivity() {
 

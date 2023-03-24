@@ -4,12 +4,8 @@
 
 using namespace cv;
 
-void myFlip(Mat src);
+Mat color2Grayscale(Mat src);
 
-Mat cannyEdgeDetection(Mat src);
+Mat enhanceContrast(Mat src);
 
-Mat color2BW(Mat src);
-
-Mat grayscale_segmentation(Mat src);
-
-Mat region_growing_segmentation(int x, int y, Mat src);
+Mat background_segmentation(Mat frame, int method, bool enableReset);

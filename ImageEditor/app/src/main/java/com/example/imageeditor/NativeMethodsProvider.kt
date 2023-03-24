@@ -2,16 +2,12 @@ package com.example.imageeditor
 
 import android.graphics.Bitmap
 
-class NativeMethodsProvider {
+object NativeMethodsProvider {
 
-    external fun flip(bitmapIn: Bitmap, bitmapOut: Bitmap)
+    external fun color2Grayscale(bitmapIn: Bitmap, bitmapOut: Bitmap)
 
-    external fun cannyEdgeDetection(bitmapIn: Bitmap, bitmapOut: Bitmap)
+    external fun enhanceContrast(bitmapIn: Bitmap, bitmapOut: Bitmap)
 
-    external fun color2BW(bitmapIn: Bitmap, bitmapOut: Bitmap)
-
-    external fun grayscaleSegmentation(bitmapIn: Bitmap, bitmapOut: Bitmap)
-
-    external fun regionGrowingSegmentation(seedPointX: Int, seedPointY: Int, bitmapIn: Bitmap, bitmapOut: Bitmap)
+    external fun backgroundSegmentation(bitmapIn: Bitmap, method: Int, enableReset: Boolean, bitmapOut: Bitmap)
 
 }
