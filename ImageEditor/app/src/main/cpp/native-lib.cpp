@@ -4,6 +4,7 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv-utils.h"
 #include "android/bitmap.h"
+#include <android/log.h>
 
 void bitmapToMat(JNIEnv *env, jobject bitmap, Mat& dst, jboolean needUnPremultiplyAlpha)
 {
@@ -133,5 +134,42 @@ Java_com_example_imageeditor_NativeMethodsProvider_backgroundSegmentation(
     Mat dst;
     dst = background_segmentation(src, method, enableReset);
     matToBitmap(env, dst, bitmapOut, false);
+}
+
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_imageeditor_NativeMethodsProvider_dbScanCluster(
+        JNIEnv* env,
+        jobject p_this,
+        jobject bitmapIn,
+        jobject bitmapOut) {
+    Mat src;
+    bitmapToMat(env, bitmapIn, src, false);
+    Mat dst = dbScanCluster(src);
+    matToBitmap(env, dst, bitmapOut, false);
+}
+
+extern "C" JNIEXPORT int JNICALL
+Java_com_example_imageeditor_NativeMethodsProvider_getClusters(
+        JNIEnv* env,
+        jobject p_this,
+        jobject bitmapIn,
+        jobject bitmapOut,
+        jboolean getClusterSizeOnly) {
+
+    static std::vector<Mat> clusters;
+    static int index;
+
+    if (getClusterSizeOnly == true) {
+        Mat src;
+        bitmapToMat(env, bitmapIn, src, false);
+        //__android_log_print(ANDROID_LOG_WARN,"Clustere", "letsgoo");
+        clusters = getClusters(src);
+        index = 0;
+    } else {
+        Mat dst = clusters[index++].clone();
+        matToBitmap(env, dst, bitmapOut, false);
+    }
+    return (int)clusters.size();
 }
 

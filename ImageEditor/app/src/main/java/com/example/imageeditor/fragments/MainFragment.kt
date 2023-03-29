@@ -3,6 +3,7 @@ package com.example.imageeditor.fragments
 import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.ImageView
@@ -12,11 +13,17 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.imageeditor.ClusterImageClassifier
 import com.example.imageeditor.ImageClassifierHelper
 import com.example.imageeditor.NativeMethodsProvider
 import com.example.imageeditor.R
 import com.thermal.seekware.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.tensorflow.lite.task.vision.classifier.Classifications
 
 
@@ -36,7 +43,9 @@ class MainFragment : Fragment(),
 
     private var inDetectionMode = false
     private lateinit var logTextView: TextView
-    private var enableBackgroundSegmentationReset = false;
+    private var enableBackgroundSegmentationReset = false
+
+    private var frameNr = 0
 
 
     private val stateCallback: SeekCamera.StateCallback =
@@ -64,15 +73,11 @@ class MainFragment : Fragment(),
             if (inDetectionMode) {
                 dstBitmap = seekImage.colorBitmap
 
-                //NativeMethodsProvider.enhanceContrast(dstBitmap, dstBitmap)
-                imageClassifierHelper.classify(dstBitmap, -90)
-
-                NativeMethodsProvider.backgroundSegmentation(dstBitmap, 3, enableBackgroundSegmentationReset, dstBitmap)
-                enableBackgroundSegmentationReset = false
-
+                onDetectionModeStarted(dstBitmap)
             } else {
                 enableBackgroundSegmentationReset = true
             }
+            frameNr++
         }
     }
 
@@ -82,7 +87,8 @@ class MainFragment : Fragment(),
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
-        imageClassifierHelper = ImageClassifierHelper(context = requireContext(), imageClassifierListener = this)
+        imageClassifierHelper =
+            ImageClassifierHelper(context = requireContext(), imageClassifierListener = this)
         infoTextView = requireView().findViewById(R.id.infoTextView)
         seekImageReader = SeekImageReader()
         seekImageReader.setOnImageAvailableListener(this)
@@ -207,6 +213,43 @@ class MainFragment : Fragment(),
         }
     }
 
+    private fun onDetectionModeStarted(dstBitmap: Bitmap) {
+        //NativeMethodsProvider.backgroundSegmentation(dstBitmap, 3, enableBackgroundSegmentationReset, dstBitmap)
+
+//        var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
+//        val clustersNr = NativeMethodsProvider.getClusters(newCluster, newCluster, true)
+//        val clusterList: MutableList<Bitmap> = mutableListOf()
+//        for (i in 0 until clustersNr) {
+//            newCluster = dstBitmap.copy(dstBitmap.config, true)
+//            NativeMethodsProvider.getClusters(newCluster, newCluster, false)
+//            clusterList.add(newCluster)
+//        }
+//        Log.w("Clustere", "listSize=${clusterList.size}")
+//
+//        val sharedFlows = clusterList.mapIndexed { index, bitmap ->
+//            val classifier = ClusterImageClassifier(index, bitmap, requireActivity())
+//            classifier.resultSharedFlow
+//        }
+//        val result = runBlocking(Dispatchers.IO) {
+//            collectClassifierResults(sharedFlows)
+//        }
+
+        NativeMethodsProvider.dbScanCluster(dstBitmap, dstBitmap)
+
+
+//        activity?.runOnUiThread {
+//            seekImageView.setImageBitmap(dstBitmap)
+//        }
+        //imageClassifierHelper.classify(dstBitmap, -90)
+    }
+
+    private suspend fun collectClassifierResults(sharedFlows: List<MutableSharedFlow<Pair<Int, Boolean>>>) {
+        sharedFlows.forEach{
+            it.collectLatest { pair ->
+                Log.w("Clustere", "classifier " + pair.first + " returned " + pair.second)
+            }
+        }
+    }
     companion object {
         private const val SEEK_PREVIEW_HEIGHT = 2160
         private const val SEEK_PREVIEW_WIDTH = 1440

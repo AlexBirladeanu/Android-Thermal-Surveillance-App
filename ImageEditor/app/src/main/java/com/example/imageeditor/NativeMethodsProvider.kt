@@ -10,4 +10,8 @@ object NativeMethodsProvider {
 
     external fun backgroundSegmentation(bitmapIn: Bitmap, method: Int, enableReset: Boolean, bitmapOut: Bitmap)
 
+    external fun getClusters(bitmapIn: Bitmap, bitmapOut: Bitmap, getClusterSizeOnly: Boolean): Int
+
+    external fun dbScanCluster(bitmapIn: Bitmap, bitmapOut: Bitmap)
+
 }
