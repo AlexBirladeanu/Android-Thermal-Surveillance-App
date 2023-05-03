@@ -57,20 +57,22 @@ class MainActivity : AppCompatActivity() {
 
         binding.bottomNavigationView.visibility = View.GONE
 
-        splashFragment = SplashFragment(
-            onExit = {
-                supportFragmentManager.beginTransaction()
-                    .hide(splashFragment)
-                    .show(recordingsFragment)
-                    .commit()
-                binding.bottomNavigationView.visibility = View.VISIBLE
-            }
-        )
+//        splashFragment = SplashFragment(
+//            onExit = {
+//                supportFragmentManager.beginTransaction()
+//                    .hide(splashFragment)
+//                    .show(recordingsFragment)
+//                    .commit()
+//                binding.bottomNavigationView.visibility = View.VISIBLE
+//            }
+//        )
+//
+//        supportFragmentManager.beginTransaction()
+//            .add(R.id.fragment_container, splashFragment)
+//            .commit()
 
-        supportFragmentManager.beginTransaction()
-            .add(R.id.fragment_container, splashFragment)
-            .commit()
-
+        supportFragmentManager.beginTransaction().show(recordingsFragment).commit()
+        binding.bottomNavigationView.visibility = View.VISIBLE
 
         //binding.bottomNavigationView.selectedItemId = R.id.camera
 
