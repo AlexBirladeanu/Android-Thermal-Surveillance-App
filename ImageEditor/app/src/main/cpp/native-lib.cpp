@@ -96,7 +96,7 @@ void matToBitmap(JNIEnv* env, Mat src, jobject bitmap, jboolean needPremultiplyA
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_color2Grayscale(
+Java_com_example_imageeditor_utils_NativeMethodsProvider_color2Grayscale(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
@@ -109,7 +109,7 @@ Java_com_example_imageeditor_NativeMethodsProvider_color2Grayscale(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_enhanceContrast(
+Java_com_example_imageeditor_utils_NativeMethodsProvider_enhanceContrast(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
@@ -122,7 +122,7 @@ Java_com_example_imageeditor_NativeMethodsProvider_enhanceContrast(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_backgroundSegmentation(
+Java_com_example_imageeditor_utils_NativeMethodsProvider_backgroundSegmentation(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
@@ -136,40 +136,45 @@ Java_com_example_imageeditor_NativeMethodsProvider_backgroundSegmentation(
     matToBitmap(env, dst, bitmapOut, false);
 }
 
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_dbScanCluster(
-        JNIEnv* env,
-        jobject p_this,
-        jobject bitmapIn,
-        jobject bitmapOut) {
-    Mat src;
-    bitmapToMat(env, bitmapIn, src, false);
-    Mat dst = dbScanCluster(src);
-    matToBitmap(env, dst, bitmapOut, false);
-}
-
 extern "C" JNIEXPORT int JNICALL
-Java_com_example_imageeditor_NativeMethodsProvider_getClusters(
+Java_com_example_imageeditor_utils_NativeMethodsProvider_getClusters(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
         jobject bitmapOut,
-        jboolean getClusterSizeOnly) {
-
+        jboolean getClusterSizeOnly,
+        jboolean enableClusterMerge
+) {
     static std::vector<Mat> clusters;
     static int index;
-
     if (getClusterSizeOnly == true) {
         Mat src;
         bitmapToMat(env, bitmapIn, src, false);
-        //__android_log_print(ANDROID_LOG_WARN,"Clustere", "letsgoo");
-        clusters = getClusters(src);
+        bool enableMerge = enableClusterMerge;
+        clusters = getClusters(src, enableMerge);
+//        if (enableClusterMerge == true) {
+//            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
+//            clusters = clustersWithBodyMerge;
+//        }
         index = 0;
     } else {
         Mat dst = clusters[index++].clone();
         matToBitmap(env, dst, bitmapOut, false);
     }
     return (int)clusters.size();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_imageeditor_utils_NativeMethodsProvider_drawPerson(
+        JNIEnv* env,
+        jobject p_this,
+        jobject bitmapIn,
+        jobject clusterBitmap,
+        jobject bitmapOut) {
+    Mat src, cluster;
+    bitmapToMat(env, bitmapIn, src, false);
+    bitmapToMat(env, clusterBitmap, cluster, false);
+    Mat dst = drawClusterRectangle(src, cluster);
+    matToBitmap(env, dst, bitmapOut, false);
 }
 
