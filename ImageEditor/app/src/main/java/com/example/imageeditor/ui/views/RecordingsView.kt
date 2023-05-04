@@ -1,8 +1,6 @@
 package com.example.imageeditor.ui.views
 
-import android.app.DatePickerDialog
 import android.os.Build
-import android.widget.DatePicker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,16 +18,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -145,7 +140,10 @@ fun RecordingsView(
                                         viewModel.filterByDate(localDate)
                                     }
                                     if (dateString.isNotEmpty() && minDetections.isNotEmpty()) {
-                                        viewModel.filterByMinDetectionsAndDate(minDetections.toIntOrNull(), localDate)
+                                        viewModel.filterByMinDetectionsAndDate(
+                                            minDetections.toIntOrNull(),
+                                            localDate
+                                        )
                                     }
                                     if (minDetections.isEmpty() && dateString.isEmpty()) {
                                         viewModel.clearFilters()
@@ -163,23 +161,36 @@ fun RecordingsView(
                         ) {
                             Checkbox(
                                 checked = selectableRecording.isSelected,
-                                onCheckedChange = { viewModel.onRecordingClicked(selectableRecording) },
+                                onCheckedChange = {
+                                    if (selectableRecording.recordingWithPhotos.recording.endedAt != null) {
+                                        viewModel.onRecordingClicked(selectableRecording)
+                                    }
+                                },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MaterialTheme.colors.primary
                                 )
                             )
+                            if (selectableRecording.recordingWithPhotos.recording.endedAt == null) {
+                                RecordingInProgressCard(selectableRecording.recordingWithPhotos)
+                            } else {
+                                RecordingCard(recordingWithPhotos = selectableRecording.recordingWithPhotos,
+                                    navigateToDetails = navigateToDetails,
+                                    onDelete = {
+                                        viewModel.deleteRecordingWithPhotos(it)
+                                    })
+
+                            }
+                        }
+                    } else {
+                        if (selectableRecording.recordingWithPhotos.recording.endedAt == null) {
+                            RecordingInProgressCard(selectableRecording.recordingWithPhotos)
+                        } else {
                             RecordingCard(recordingWithPhotos = selectableRecording.recordingWithPhotos,
                                 navigateToDetails = navigateToDetails,
                                 onDelete = {
                                     viewModel.deleteRecordingWithPhotos(it)
                                 })
                         }
-                    } else {
-                        RecordingCard(recordingWithPhotos = selectableRecording.recordingWithPhotos,
-                            navigateToDetails = navigateToDetails,
-                            onDelete = {
-                                viewModel.deleteRecordingWithPhotos(it)
-                            })
                     }
                 }
             }
@@ -288,6 +299,60 @@ private fun RecordingCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecordingInProgressCard(
+    recordingWithPhotos: RecordingWithPhotos
+) {
+    Card(
+        modifier = Modifier
+            .background(Color.Black)
+            .padding(vertical = 8.dp),
+        elevation = 4.dp,
+        shape = RoundedCornerShape(8.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colors.secondary)
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "Recording " + recordingWithPhotos.recording.recordingId.toString(),
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = "Started At:   ", color = Color.White)
+                }
+                Column {
+                    Text(
+                        text = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+                            .format(recordingWithPhotos.recording.startedAt), color = Color.White
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp, end = 16.dp, top = 40.dp, start = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "In Progress",
+                    color = MaterialTheme.colors.primary,
+                    fontSize = 24.sp
+                )
+                CircularProgressIndicator()
             }
         }
     }

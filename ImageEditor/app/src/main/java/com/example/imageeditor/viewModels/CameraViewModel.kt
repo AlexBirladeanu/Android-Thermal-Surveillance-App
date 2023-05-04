@@ -39,12 +39,13 @@ class CameraViewModel : ViewModel() {
             )
             currentRecording =
                 recordingsDao.getAllRecordings().first { it.startedAt == currentTime }
+            notifyRecordingsViewModel()
         }
     }
 
     fun stopRecording() {
         val currentTime = System.currentTimeMillis()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             recordingsDao.insertRecording(
                 Recording(
                     recordingId = currentRecording.recordingId,
@@ -77,6 +78,6 @@ class CameraViewModel : ViewModel() {
     }
 
     private fun notifyRecordingsViewModel() {
-        RecordingsViewModel.eventLiveData.value = Unit
+        RecordingsViewModel.eventLiveData.postValue(Unit)
     }
 }

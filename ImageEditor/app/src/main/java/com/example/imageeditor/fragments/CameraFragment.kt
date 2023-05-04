@@ -196,7 +196,7 @@ class CameraFragment : Fragment(),
 
 
         var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
-        val clustersNr = NativeMethodsProvider.getClusters(newCluster, newCluster, true, true)
+        val clustersNr = NativeMethodsProvider.getClusters(newCluster, newCluster, true, AppSettingsProvider.isBodyMergeEnabled())
         val clusterList: MutableList<Bitmap> = mutableListOf()
         for (i in 0 until clustersNr) {
             newCluster = dstBitmap.copy(dstBitmap.config, true)
@@ -235,8 +235,8 @@ class CameraFragment : Fragment(),
                         bitmap = bitmap,
                         fragmentActivity = requireActivity(),
                         frameIndex = frameIndex,
-                        drawBitmap = { bitmap, frameIndex, msg ->
-                            drawPerson(bitmap, frameIndex, msg)
+                        drawBitmap = { bitmap, frameIndex, isFace, msg ->
+                            drawPerson(bitmap, frameIndex, isFace, msg)
                         }
                     )
                     classifier.classify()
@@ -253,13 +253,14 @@ class CameraFragment : Fragment(),
     private var peopleDetected = 0
     private lateinit var bitmapToSave: Bitmap
 
-    private fun drawPerson(personCluster: Bitmap, frameIndex: Int, message: String) {
+    private fun drawPerson(personCluster: Bitmap, frameIndex: Int, isFace: Boolean, message: String) {
         val newLog = logTextView.text.toString() + message
         logTextView.text = newLog
 
         NativeMethodsProvider.drawPerson(
             dstBitmap,
             personCluster,
+            isFace,
             dstBitmap
         )
         if (lastFrameIndex == -1) {

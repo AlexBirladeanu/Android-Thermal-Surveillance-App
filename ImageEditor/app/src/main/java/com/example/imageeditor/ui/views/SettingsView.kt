@@ -62,7 +62,7 @@ fun SettingsView(
                     val isVibrationEnabled = viewModel.isVibrationEnabled.collectAsState()
                     val isSoundEnabled = viewModel.isSoundEnabled.collectAsState()
                     val timeBetweenPhotos = viewModel.timeBetweenPhotos.collectAsState()
-
+                    val isBodyMergeEnabled by viewModel.isBodyMergeEnabled.collectAsState()
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -83,7 +83,11 @@ fun SettingsView(
                             colors = switchColors
                         )
                     }
-                    Divider(color = Blue, modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                    Divider(
+                        color = Blue,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -104,7 +108,11 @@ fun SettingsView(
                             colors = switchColors
                         )
                     }
-                    Divider(color = Blue, modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+                    Divider(
+                        color = Blue,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
                     Column(
                         modifier = Modifier
                             .padding(8.dp)
@@ -119,6 +127,50 @@ fun SettingsView(
                             onSubmit = {
                                 viewModel.updateTimeBetweenPhotos(it)
                             }
+                        )
+                    }
+                    Divider(
+                        color = Blue,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(bottom = 4.dp),
+                            text = "Prioritize",
+                            color = textColor,
+                            fontSize = 18.sp
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Face detection",
+                                color = MaterialTheme.colors.primary
+                            )
+                            Text(
+                                modifier = Modifier.padding(end = 8.dp),
+                                text = "Body detection",
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
+                        var sliderValue by remember { mutableStateOf(if (isBodyMergeEnabled) 1f else 0f) }
+                        Slider(
+                            value = sliderValue,
+                            onValueChange = {
+                                sliderValue = it
+                            },
+                            onValueChangeFinished = {
+                                (sliderValue > 0.5f).let { enableBodyMerge ->
+                                    sliderValue = if(enableBodyMerge) 1f else 0f
+                                    viewModel.updateIsBodyMergeEnabled(enableBodyMerge)
+                                }
+                            },
+                            valueRange = 0f..1f,
                         )
                     }
                 }

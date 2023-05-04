@@ -59,11 +59,11 @@ class RecordingsViewModel : ViewModel() {
 
     fun deleteSelected() {
         viewModelScope.launch(Dispatchers.IO) {
-            val newList = mutableListOf<SelectableRecording>()
-            newList.addAll(_recordingsList.value.filter { !it.isSelected })
-            _recordingsList.value = newList
+            val listToDelete = mutableListOf<SelectableRecording>()
+            listToDelete.addAll(_recordingsList.value.filter { it.isSelected })
+            _recordingsList.value = _recordingsList.value.filter { !it.isSelected }
 
-            _recordingsList.value.filter { it.isSelected }.forEach {
+            listToDelete.forEach {
                 it.recordingWithPhotos.photos.forEach { photo ->
                     recordingsDao.deletePhoto(photo)
                 }

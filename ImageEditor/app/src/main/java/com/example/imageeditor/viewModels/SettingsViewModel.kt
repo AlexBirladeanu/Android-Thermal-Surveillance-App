@@ -16,10 +16,14 @@ class SettingsViewModel: ViewModel() {
     private val _timeBetweenPhotos: MutableStateFlow<Int> = MutableStateFlow(1)
     val timeBetweenPhotos = _timeBetweenPhotos.asStateFlow()
 
+    private val _isBodyMergeEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isBodyMergeEnabled = _isBodyMergeEnabled.asStateFlow()
+
     init {
         _isVibrationEnabled.value = AppSettingsProvider.getVibrations()
         _isSoundEnabled.value = AppSettingsProvider.getSoundNotifications()
         _timeBetweenPhotos.value = (AppSettingsProvider.getTimeBetweenPhotos() / 1000).toInt()
+        _isBodyMergeEnabled.value = AppSettingsProvider.isBodyMergeEnabled()
     }
 
     fun updateVibration(isEnabled: Boolean) {
@@ -36,5 +40,10 @@ class SettingsViewModel: ViewModel() {
         _timeBetweenPhotos.value = seconds
         val milliseconds = (seconds * 1000).toLong()
         AppSettingsProvider.setTimeBetweenPhotos(milliseconds)
+    }
+
+    fun updateIsBodyMergeEnabled(isEnabled: Boolean) {
+        _isBodyMergeEnabled.value = isEnabled
+        AppSettingsProvider.setIsBodyMergeEnabled(isEnabled)
     }
 }

@@ -152,10 +152,10 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_getClusters(
         bitmapToMat(env, bitmapIn, src, false);
         bool enableMerge = enableClusterMerge;
         clusters = getClusters(src, enableMerge);
-//        if (enableClusterMerge == true) {
-//            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
-//            clusters = clustersWithBodyMerge;
-//        }
+        if (enableClusterMerge == true) {
+            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
+            clusters = clustersWithBodyMerge;
+        }
         index = 0;
     } else {
         Mat dst = clusters[index++].clone();
@@ -170,11 +170,12 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_drawPerson(
         jobject p_this,
         jobject bitmapIn,
         jobject clusterBitmap,
+        jboolean isFace,
         jobject bitmapOut) {
     Mat src, cluster;
     bitmapToMat(env, bitmapIn, src, false);
     bitmapToMat(env, clusterBitmap, cluster, false);
-    Mat dst = drawClusterRectangle(src, cluster);
+    Mat dst = drawClusterRectangle(src, cluster, isFace);
     matToBitmap(env, dst, bitmapOut, false);
 }
 

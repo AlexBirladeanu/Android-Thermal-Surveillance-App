@@ -14,4 +14,4 @@ std::vector<Mat> mergeBodyClusters(std::vector<Mat> originalClusters, Mat origin
 
 std::vector<Mat> getClusters(Mat src, bool enableMerge);
 
-Mat drawClusterRectangle(Mat src, Mat cluster);
+Mat drawClusterRectangle(Mat src, Mat cluster, bool isFaceCluster);
