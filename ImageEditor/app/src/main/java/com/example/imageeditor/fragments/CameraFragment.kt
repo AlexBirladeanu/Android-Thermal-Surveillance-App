@@ -5,8 +5,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaPlayer
 import android.os.*
-import android.provider.MediaStore.Audio.Media
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.imageeditor.R
 import com.example.imageeditor.classification.ImageClassifier
+import com.example.imageeditor.databinding.FragmentCameraBinding
 import com.example.imageeditor.utils.AppSettingsProvider
 import com.example.imageeditor.utils.NativeMethodsProvider
 import com.example.imageeditor.viewModels.CameraViewModel
@@ -24,7 +23,6 @@ import com.thermal.seekware.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.tensorflow.lite.task.vision.classifier.Classifications
 
 
 class CameraFragment : Fragment(),
@@ -48,6 +46,8 @@ class CameraFragment : Fragment(),
     private var frameIndex = 0
     private var colorPaletteIndex = 0
     private var lastVibrationTimestamp = 0L
+
+    private lateinit var binding: FragmentCameraBinding
 
     //    private val viewModel = ViewModelProvider(this)[CameraViewModel::class.java]
     private val viewModel = CameraViewModel()
@@ -78,8 +78,9 @@ class CameraFragment : Fragment(),
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_main, container, false)
+    ): View {
+        binding = FragmentCameraBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onImageAvailable(p0: SeekImage?) {
@@ -108,14 +109,14 @@ class CameraFragment : Fragment(),
 
         setupCamera()
 
-        val toolbar: androidx.appcompat.widget.Toolbar = requireView().findViewById(R.id.toolbar)
+        val toolbar: androidx.appcompat.widget.Toolbar = binding.toolbar
         toolbar.title = "Camera"
         (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
-        logTextView = requireView().findViewById(R.id.log)
-        chronometer = requireView().findViewById(R.id.chronometer)
+        logTextView = binding.log
+        chronometer = binding.chronometer
         chronometer.visibility = View.GONE
         mediaPlayer = MediaPlayer.create(requireActivity(), R.raw.notification_alert)
-        startButton = requireView().findViewById(R.id.startButton)
+        startButton = binding.startButton
         startButton.setOnClickListener {
             if (inDetectionMode) {
                 stopDetectionMode()
@@ -126,8 +127,8 @@ class CameraFragment : Fragment(),
     }
 
     private fun setupCamera() {
-        seekPreview = requireView().findViewById(R.id.seek_preview)
-        seekImageView = requireView().findViewById(R.id.seek_image_view)
+        seekPreview = binding.seekPreview
+        seekImageView = binding.seekImageView
         seekImageReader = SeekImageReader()
         seekImageReader.setOnImageAvailableListener(this)
         seekPreview.initialize(false)
