@@ -146,14 +146,14 @@ class CameraFragment : Fragment(),
     }
 
     private fun startDetectionMode() {
-        seekPreview.visibility = View.GONE
+        seekPreview.visibility = View.INVISIBLE
         seekImageView.visibility = View.VISIBLE
         viewModel.startRecording()
     }
 
     private fun stopDetectionMode() {
         seekPreview.visibility = View.VISIBLE
-        seekImageView.visibility = View.GONE
+        seekImageView.visibility = View.INVISIBLE
         viewModel.stopRecording()
     }
 

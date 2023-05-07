@@ -1,14 +1,6 @@
 package com.example.imageeditor.viewModels
 
-import android.content.Context
-import android.content.Context.VIBRATOR_SERVICE
 import android.graphics.Bitmap
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import androidx.compose.runtime.MutableState
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,8 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.sql.Timestamp
-import kotlin.properties.Delegates
 
 class CameraViewModel : ViewModel() {
 

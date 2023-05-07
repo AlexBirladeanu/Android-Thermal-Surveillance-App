@@ -232,7 +232,7 @@ private fun RecordingCard(
     ) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.primary.copy(alpha = 0.1f))
                 .padding(8.dp)
         ) {
             Text(
@@ -320,7 +320,7 @@ private fun RecordingInProgressCard(
     ) {
         Column(
             modifier = Modifier
-                .background(MaterialTheme.colors.secondary)
+                .background(MaterialTheme.colors.primary.copy(alpha = 0.1f))
                 .padding(8.dp)
         ) {
             Text(
