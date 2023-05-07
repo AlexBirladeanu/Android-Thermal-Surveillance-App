@@ -47,7 +47,7 @@ fun PhotosView(
     val permissionResultLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
-            Toast.makeText(context, "Permission granted = $isGranted", Toast.LENGTH_SHORT).show()
+        //    Toast.makeText(context, "Permission granted = $isGranted", Toast.LENGTH_SHORT).show()
         }
     )
     val recordingWithPhotos = RecordingsViewModel.selectedRecordingWithPhotos

@@ -24,7 +24,7 @@
     <ImageView
         android:id="@+id/seek_image_view"
         android:layout_width="match_parent"
-        android:layout_height="400.dp"
+        android:layout_height="400dp"
         android:visibility="gone"
         android:rotation="-90"
         app:layout_constraintEnd_toEndOf="parent"

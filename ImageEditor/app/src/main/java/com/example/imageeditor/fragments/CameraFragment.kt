@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.imageeditor.R
 import com.example.imageeditor.classification.ImageClassifier
-import com.example.imageeditor.classification.ImageClassifierHelper
 import com.example.imageeditor.utils.AppSettingsProvider
 import com.example.imageeditor.utils.NativeMethodsProvider
 import com.example.imageeditor.viewModels.CameraViewModel
@@ -29,8 +28,7 @@ import org.tensorflow.lite.task.vision.classifier.Classifications
 
 
 class CameraFragment : Fragment(),
-    SeekImageReader.OnImageAvailableListener,
-    ImageClassifierHelper.ClassifierListener {
+    SeekImageReader.OnImageAvailableListener {
 
     private lateinit var seekCamera: SeekCamera
     private lateinit var seekImageReader: SeekImageReader
@@ -39,7 +37,6 @@ class CameraFragment : Fragment(),
     private lateinit var seekImageView: ImageView
 
     private lateinit var dstBitmap: Bitmap
-    private lateinit var imageClassifierHelper: ImageClassifierHelper
 
     private lateinit var logTextView: TextView
     private lateinit var startButton: Button
@@ -91,6 +88,7 @@ class CameraFragment : Fragment(),
             if (inDetectionMode) {
                 dstBitmap = seekImage.colorBitmap
 
+                enableBackgroundSegmentationReset = false
                 classifyFrame()
 
                 seekImageView.setImageBitmap(dstBitmap)
@@ -109,9 +107,6 @@ class CameraFragment : Fragment(),
         )
 
         setupCamera()
-
-        imageClassifierHelper =
-            ImageClassifierHelper(context = requireContext(), imageClassifierListener = this)
 
         val toolbar: androidx.appcompat.widget.Toolbar = requireView().findViewById(R.id.toolbar)
         toolbar.title = "Camera"
@@ -165,102 +160,111 @@ class CameraFragment : Fragment(),
         viewModel.stopRecording()
     }
 
-    override fun onError(error: String) {
-        activity?.runOnUiThread {
-            Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onResults(results: List<Classifications>?, inferenceTime: Long) {
-        activity?.runOnUiThread {
-            val detected: MutableList<String> = mutableListOf()
-            results?.forEach { classifications ->
-                classifications.categories.forEach {
-                    //if (it.label == "body" && it.score > 0.55) {
-                    //detected.add(it.label.toString() + " " + it.score.toString())
-                    //}
-                    //if (it.label == "face" && it.score > 0.83) {
-                    detected.add(it.label.toString() + " " + it.score.toString())
-                    //}
-                }
-            }
-            logTextView.text = detected.toString()
-        }
-    }
-
     private fun classifyFrame() {
-        //NativeMethodsProvider.backgroundSegmentation(dstBitmap, 3, enableBackgroundSegmentationReset, dstBitmap)
-        //NativeMethodsProvider.color2Grayscale(dstBitmap, dstBitmap)
-        //NativeMethodsProvider.enhanceContrast(dstBitmap, dstBitmap)
-        //imageClassifierHelper.classify(dstBitmap, -90)
-
-
-        var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
-        val clustersNr = NativeMethodsProvider.getClusters(newCluster, newCluster, true, AppSettingsProvider.isBodyMergeEnabled())
-        val clusterList: MutableList<Bitmap> = mutableListOf()
-        for (i in 0 until clustersNr) {
-            newCluster = dstBitmap.copy(dstBitmap.config, true)
-            NativeMethodsProvider.getClusters(newCluster, newCluster, false, false)
-            clusterList.add(newCluster)
-        }
         frameIndex++
+        if (AppSettingsProvider.getDetectPeople()) {
+            detectPeople()
+        } else {
+            detectMotionOnly()
+        }
+    }
 
-        Log.w("Clustere", "frame $frameIndex has listSize=${clusterList.size}")
+    private fun detectPeople() {
+        val movementBitmap = dstBitmap.copy(dstBitmap.config, true)
+        val isMovement = NativeMethodsProvider.backgroundSegmentation(
+            movementBitmap,
+            2,
+            enableBackgroundSegmentationReset,
+            movementBitmap
+        )
+        if (isMovement) {
+            NativeMethodsProvider.enhanceContrast(movementBitmap, movementBitmap)
+            val classifier = ImageClassifier(
+                i = 0,
+                bitmap = movementBitmap,
+                fragmentActivity = requireActivity(),
+                frameIndex = frameIndex,
+                drawBitmap = { bitmap, frameIndex, message, log ->
+                    drawRectangle(bitmap, frameIndex, message, log)
+                }
+            )
+            classifier.classify()
+
+        } else {
+            var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
+            val clustersNr = NativeMethodsProvider.getClusters(
+                newCluster,
+                newCluster,
+                true,
+                AppSettingsProvider.isBodyMergeEnabled()
+            )
+            val clusterList: MutableList<Bitmap> = mutableListOf()
+            for (i in 0 until clustersNr) {
+                newCluster = dstBitmap.copy(dstBitmap.config, true)
+                NativeMethodsProvider.getClusters(newCluster, newCluster, false, false)
+                clusterList.add(newCluster)
+            }
 
 //        clusterList.forEach {
 //            drawPerson(it, frameIndex, "")
 //        }
 
-
-        //
-//        if (clusterList.isNotEmpty()) {
-//            dstBitmap = clusterList.first()
-//            NativeMethodsProvider.enhanceContrast(dstBitmap, dstBitmap)
-//            clusterList.forEach {
-//                imageClassifierHelper.classify(it, -90)
-//            }
-//        } else {
-//            logTextView.text = "false"
-//        }
-
-
-        //Classify clusters
-        runBlocking {
-            val jobs = mutableListOf<Job>()
-            clusterList.forEachIndexed { index, bitmap ->
-                val job = launch {
-                    NativeMethodsProvider.enhanceContrast(bitmap, bitmap)
-                    val classifier = ImageClassifier(
-                        i = index,
-                        bitmap = bitmap,
-                        fragmentActivity = requireActivity(),
-                        frameIndex = frameIndex,
-                        drawBitmap = { bitmap, frameIndex, isFace, msg ->
-                            drawPerson(bitmap, frameIndex, isFace, msg)
-                        }
-                    )
-                    classifier.classify()
+            runBlocking {
+                val jobs = mutableListOf<Job>()
+                clusterList.forEachIndexed { index, bitmap ->
+                    val job = launch {
+                        NativeMethodsProvider.enhanceContrast(bitmap, bitmap)
+                        val classifier = ImageClassifier(
+                            i = index,
+                            bitmap = bitmap,
+                            fragmentActivity = requireActivity(),
+                            frameIndex = frameIndex,
+                            drawBitmap = { bitmap, frameIndex, message, log ->
+                                drawRectangle(bitmap, frameIndex, message, log)
+                            }
+                        )
+                        classifier.classify()
+                    }
+                    jobs.add(job)
                 }
-                jobs.add(job)
-            }
-            jobs.forEach {
-                it.join()
+                jobs.forEach {
+                    it.join()
+                }
             }
         }
+    }
+
+    private fun detectMotionOnly() {
+        val movementBitmap = dstBitmap.copy(dstBitmap.config, true)
+        val isMovement = NativeMethodsProvider.backgroundSegmentation(
+            movementBitmap,
+            1,
+            enableBackgroundSegmentationReset,
+            movementBitmap
+        )
+        if (isMovement) {
+            drawRectangle(movementBitmap, frameIndex, "Movement", "")
+        }
+
     }
 
     private var lastFrameIndex = -1
     private var peopleDetected = 0
     private lateinit var bitmapToSave: Bitmap
 
-    private fun drawPerson(personCluster: Bitmap, frameIndex: Int, isFace: Boolean, message: String) {
-        val newLog = logTextView.text.toString() + message
+    private fun drawRectangle(
+        personCluster: Bitmap,
+        frameIndex: Int,
+        message: String,
+        log: String
+    ) {
+        val newLog = logTextView.text.toString() + log
         logTextView.text = newLog
 
-        NativeMethodsProvider.drawPerson(
+        NativeMethodsProvider.drawRectangle(
             dstBitmap,
             personCluster,
-            isFace,
+            message,
             dstBitmap
         )
         if (lastFrameIndex == -1) {
@@ -314,6 +318,7 @@ class CameraFragment : Fragment(),
                     requireActivity().getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibratorManager.defaultVibrator
             } else {
+                @Suppress("DEPRECATION")
                 requireActivity().getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -321,6 +326,7 @@ class CameraFragment : Fragment(),
                     VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE)
                 vibrator.vibrate(vibrationEffect)
             } else {
+                @Suppress("DEPRECATION")
                 vibrator.vibrate(1000)
             }
 

@@ -9,9 +9,9 @@ object NativeMethodsProvider {
 
     external fun enhanceContrast(bitmapIn: Bitmap, bitmapOut: Bitmap)
 
-    external fun backgroundSegmentation(bitmapIn: Bitmap, method: Int, enableReset: Boolean, bitmapOut: Bitmap)
+    external fun backgroundSegmentation(bitmapIn: Bitmap, method: Int, enableReset: Boolean, bitmapOut: Bitmap): Boolean
 
     external fun getClusters(bitmapIn: Bitmap, bitmapOut: Bitmap, getClusterSizeOnly: Boolean = false, enableClusterMerge: Boolean): Int
 
-    external fun drawPerson(bitmapIn: Bitmap, cluster: Bitmap, isFace: Boolean, bitmapOut: Bitmap)
+    external fun drawRectangle(bitmapIn: Bitmap, cluster: Bitmap, message: String, bitmapOut: Bitmap)
 }

@@ -148,6 +148,9 @@ fun RecordingsView(
                                     if (minDetections.isEmpty() && dateString.isEmpty()) {
                                         viewModel.clearFilters()
                                     }
+                                },
+                                isDateValid = {
+                                    viewModel.isDateValid(it)
                                 }
                             )
                         }
@@ -162,9 +165,9 @@ fun RecordingsView(
                             Checkbox(
                                 checked = selectableRecording.isSelected,
                                 onCheckedChange = {
-                                    if (selectableRecording.recordingWithPhotos.recording.endedAt != null) {
+                                    //if (selectableRecording.recordingWithPhotos.recording.endedAt != null) {
                                         viewModel.onRecordingClicked(selectableRecording)
-                                    }
+                                    //}
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MaterialTheme.colors.primary
@@ -440,7 +443,8 @@ private fun Filters(
     dateString: String,
     updateMinDetections: (String) -> Unit,
     updateDateString: (String) -> Unit,
-    onDone: (String, LocalDate) -> Unit
+    onDone: (String, LocalDate) -> Unit,
+    isDateValid: (LocalDate) -> Boolean
 ) {
     var date by remember { mutableStateOf(LocalDate.now()) }
     val dateDialogState = rememberMaterialDialogState()
@@ -530,7 +534,6 @@ private fun Filters(
         updateDateString(date.toString())
         onDone(minDetections, date)
     }, isDateValid = {
-        //viewModel.isDateValid(it)
-        true
+        isDateValid(it)
     })
 }

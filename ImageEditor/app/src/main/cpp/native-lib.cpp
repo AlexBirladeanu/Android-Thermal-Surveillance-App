@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include <string.h>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv-utils.h"
@@ -121,7 +122,7 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_enhanceContrast(
     matToBitmap(env, dst, bitmapOut, false);
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_example_imageeditor_utils_NativeMethodsProvider_backgroundSegmentation(
         JNIEnv* env,
         jobject p_this,
@@ -131,9 +132,13 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_backgroundSegmentation(
         jobject bitmapOut) {
     Mat src;
     bitmapToMat(env, bitmapIn, src, false);
-    Mat dst;
-    dst = background_segmentation(src, method, enableReset);
+    Mat dst = src.clone();
+    bool wasMotionDetected = background_segmentation(src, method, enableReset, dst);
+    if (!wasMotionDetected) {
+        dst = src.clone();
+    }
     matToBitmap(env, dst, bitmapOut, false);
+    return wasMotionDetected;
 }
 
 extern "C" JNIEXPORT int JNICALL
@@ -152,10 +157,10 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_getClusters(
         bitmapToMat(env, bitmapIn, src, false);
         bool enableMerge = enableClusterMerge;
         clusters = getClusters(src, enableMerge);
-        if (enableClusterMerge == true) {
-            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
-            clusters = clustersWithBodyMerge;
-        }
+//        if (enableClusterMerge == true) {
+//            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
+//            clusters = clustersWithBodyMerge;
+//        }
         index = 0;
     } else {
         Mat dst = clusters[index++].clone();
@@ -165,17 +170,21 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_getClusters(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_imageeditor_utils_NativeMethodsProvider_drawPerson(
+Java_com_example_imageeditor_utils_NativeMethodsProvider_drawRectangle(
         JNIEnv* env,
         jobject p_this,
         jobject bitmapIn,
         jobject clusterBitmap,
-        jboolean isFace,
+        jstring messageString,
         jobject bitmapOut) {
     Mat src, cluster;
     bitmapToMat(env, bitmapIn, src, false);
     bitmapToMat(env, clusterBitmap, cluster, false);
-    Mat dst = drawClusterRectangle(src, cluster, isFace);
+    const char* message = (*env).GetStringUTFChars(messageString, 0);
+
+    Mat dst = drawClusterRectangle(src, cluster, (char*)message);
     matToBitmap(env, dst, bitmapOut, false);
+
+    (*env).ReleaseStringUTFChars(messageString, message);
 }
 

@@ -11,7 +11,7 @@ class ImageClassifier(
     val bitmap: Bitmap,
     fragmentActivity: FragmentActivity,
     val frameIndex: Int,
-    val drawBitmap: (Bitmap, Int, Boolean, String) -> Unit
+    val drawBitmap: (Bitmap, Int, String, String) -> Unit
 ) : ImageClassifierHelper.ClassifierListener {
 
     private val index: Int
@@ -40,21 +40,22 @@ class ImageClassifier(
 
     override fun onResults(results: List<Classifications>?, inferenceTime: Long) {
         activity.runOnUiThread {
+            var log = ""
             var message = ""
             var personFound = false
-            var isFace = false
             results?.forEach { classifications ->
                 classifications.categories.forEach {
-                    if (it.label == "body" && it.score > 0.53) {
+                    if (it.label == "body" && it.score > 0.54) {
                         personFound = true
+                        message = "Body"
                     }
                     if (it.label == "face" && it.score > 0.80) {
                         personFound = true
-                        isFace = true
+                        message = "Face"
                     }
 
 
-                    message += it.label.toString() + " " + it.score.toString()
+                    log += it.label.toString() + " " + it.score.toString()
 
                 }
             }
@@ -63,7 +64,7 @@ class ImageClassifier(
                 "personFound=$personFound at frame " + frameIndex + " at cluster " + index
             )
             if (personFound) {
-                drawBitmap(bitmap, frameIndex, isFace, message)
+                drawBitmap(bitmap, frameIndex, message, log)
             }
         }
     }

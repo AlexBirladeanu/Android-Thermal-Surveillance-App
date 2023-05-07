@@ -37,19 +37,15 @@ Mat crop(Mat src, int xMin, int xMax, int yMin, int yMax) {
     return dst;
 }
 
-Mat drawRectangle(Mat src, Point topLeft, Point bottomRight, bool isFaceCluster) {
+Mat drawRectangle(Mat src, Point topLeft, Point bottomRight, char *message) {
     Mat dst = src.clone();
     int thickness = 3;
     rectangle(dst, topLeft, bottomRight, Scalar(255, 0, 0), thickness, LINE_8);
-    if (isFaceCluster) {
-        putText(dst, "Face", Point(topLeft.x, bottomRight.y), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, LINE_AA);
-    } else {
-        putText(dst, "Body", Point(topLeft.x, bottomRight.y), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, LINE_AA);
-    }
+    putText(dst, message, Point(topLeft.x, bottomRight.y), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 255, 255), 1, LINE_AA);
     return dst;
 }
 
-Mat drawClusterRectangle(Mat frame, Mat cluster, bool isFaceCluster) {
+Mat drawClusterRectangle(Mat frame, Mat cluster, char* message) {
     Mat gray;
     cvtColor(cluster, gray, COLOR_BGR2GRAY);
     Mat bw;//binary
@@ -95,7 +91,7 @@ Mat drawClusterRectangle(Mat frame, Mat cluster, bool isFaceCluster) {
     Point bottomRight(xMax, yMax);
 
     //return bw;
-    return drawRectangle(frame, topLeft, bottomRight, isFaceCluster);
+    return drawRectangle(frame, topLeft, bottomRight, message);
 }
 
 vector<Mat> mergeBodyClusters(vector<Mat> originalClusters, Mat originalFrame) {
@@ -107,20 +103,16 @@ vector<Mat> mergeBodyClusters(vector<Mat> originalClusters, Mat originalFrame) {
     vector<int> yMaxVector;
 
     for (auto &cluster: originalClusters) {
-        __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters100");
 
         Mat bw;//binary
         threshold(cluster, bw, 0, 255, THRESH_BINARY | THRESH_OTSU);
 
-        __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters101");
         int xMin = bw.cols - 1;
         int xMax = 1;
         int yMin = bw.rows - 1;
         int yMax = 1;
         for (int i = 0; i < bw.rows; i++) {
-            __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters102");
             for (int j = 0; j < bw.cols; j++) {
-                __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters11");
                 if (bw.at<uchar>(i, j) == 255) {
                     if (i < yMin) {
                         yMin = i;
@@ -155,7 +147,6 @@ vector<Mat> mergeBodyClusters(vector<Mat> originalClusters, Mat originalFrame) {
         yMaxVector.push_back(yMax);
     }
 
-    __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters2");
 
     vector<int> alreadyVerifiedIndexes;
     vector<Mat> newClusters;
@@ -218,7 +209,6 @@ vector<Mat> mergeBodyClusters(vector<Mat> originalClusters, Mat originalFrame) {
 
     }
 
-    __android_log_print(ANDROID_LOG_WARN, "Reparatii", "mergeClusters3");
     return newClusters;
 }
 
@@ -338,7 +328,9 @@ vector<Mat> getClusters(Mat src, bool enableMerge) {
     return clusters;
 }
 
-Mat background_segmentation(Mat frame, int method, bool enableReset) {
+bool background_segmentation(Mat frame, int method, bool enableReset, Mat& result) {
+    __android_log_print(ANDROID_LOG_WARN,"Reparatii", "background_segmentation");
+
     Mat gray; //current frame: original and gray
     static Mat backgnd; // background model
     static Mat diff; //difference image: |frame_gray - bacgnd|
@@ -354,8 +346,6 @@ Mat background_segmentation(Mat frame, int method, bool enableReset) {
     const unsigned char Th = 15;
     const double alpha = 0.05;
     ++frameNum;
-    char frameNumString[255];
-    sprintf(frameNumString, "%d", frameNum);
 
     cvtColor(frame, gray, COLOR_BGR2GRAY);
     GaussianBlur(gray, gray, Size(5, 5), 0, 0);
@@ -363,12 +353,17 @@ Mat background_segmentation(Mat frame, int method, bool enableReset) {
 
     if (frameNum == 0) {
         backgnd = gray.clone();
-        return frame;
+        //return frame;
+        result = frame;
+        return false;
     }
 
     const int channels_gray = gray.channels();
-    if (channels_gray > 1)
-        return frame;
+    if (channels_gray > 1) {
+        //return frame;
+        result = frame;
+        return false;
+    }
     if (frameNum > 0) // daca nu este primul cadru
     {
         // Calcul imagine diferenta dintre cadrul current (gray) si fundal (backgnd)
@@ -438,5 +433,8 @@ Mat background_segmentation(Mat frame, int method, bool enableReset) {
         yMin = frame.rows;
         yMax = 0;
     }
-    return crop(frame, xMin, xMax, yMin, yMax);
+    //return crop(frame, xMin, xMax, yMin, yMax);
+    //return dst;
+    result = crop(gray, xMin, xMax, yMin, yMax);
+    return isMovement;
 }

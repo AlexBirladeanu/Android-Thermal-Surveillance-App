@@ -3,17 +3,22 @@ package com.example.imageeditor.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.unusedapprestrictions.IUnusedAppRestrictionsBackportCallback.Default
 
 object AppSettingsProvider {
     private const val KEY_VIBRATIONS = "Vibrations"
     private const val KEY_SOUND_NOTIFICATIONS = "Sound notifications"
     private const val KEY_TIME_BETWEEN_PHOTOS = "Time between photos"
     private const val KEY_BODY_MERGE_ENABLED = "Enable body merge"
+    private const val KEY_AUTO_START = "Start/Stop"
+    private const val KEY_DETECT_PEOPLE = "Detection Mode"
 
     private const val DEFAULT_VIBRATIONS_VALUE = true
     private const val DEFAULT_SOUND_NOTIFICATIONS_VALUE = true
     private const val DEFAULT_TIME_BETWEEN_PHOTOS_VALUE = 1000L
     private const val DEFAULT_BODY_MERGE_ENABLED = false
+    private const val DEFAULT_AUTO_START = false
+    private const val DEFAULT_DETECT_PEOPLE = true
 
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -49,6 +54,20 @@ object AppSettingsProvider {
         }
     }
 
+    fun setAutoStart(value: Boolean) {
+        with (sharedPreferences.edit()) {
+            putBoolean(KEY_AUTO_START, value)
+            apply()
+        }
+    }
+
+    fun setDetectPeople(value: Boolean) {
+        with (sharedPreferences.edit()) {
+            putBoolean(KEY_DETECT_PEOPLE, value)
+            apply()
+        }
+    }
+
     fun getVibrations(): Boolean =
         sharedPreferences.getBoolean(KEY_VIBRATIONS, DEFAULT_VIBRATIONS_VALUE)
 
@@ -60,4 +79,10 @@ object AppSettingsProvider {
 
     fun isBodyMergeEnabled(): Boolean =
         sharedPreferences.getBoolean(KEY_BODY_MERGE_ENABLED, DEFAULT_BODY_MERGE_ENABLED)
+
+    fun getAutoStart(): Boolean =
+        sharedPreferences.getBoolean(KEY_AUTO_START, DEFAULT_AUTO_START)
+
+    fun getDetectPeople(): Boolean =
+        sharedPreferences.getBoolean(KEY_DETECT_PEOPLE, DEFAULT_DETECT_PEOPLE)
 }
