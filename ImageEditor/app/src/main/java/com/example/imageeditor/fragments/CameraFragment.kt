@@ -46,6 +46,8 @@ class CameraFragment : Fragment(),
     private var frameIndex = 0
     private var colorPaletteIndex = 0
     private var lastVibrationTimestamp = 0L
+    private var framesSinceLastDetection = 0
+    private var consecutiveFramesWithDetections = 0
 
     private lateinit var binding: FragmentCameraBinding
 
@@ -64,12 +66,14 @@ class CameraFragment : Fragment(),
         }
 
     private fun onCameraConnected() {
+        viewModel.updateCameraConnection(true)
         seekCamera.colorPalette = colorPaletteList[0]
         seekCamera.createSeekCameraCaptureSession(seekImageReader, seekPreview)
         seekPreview.visibility = View.VISIBLE
     }
 
     private fun onCameraDisconnected() {
+        viewModel.updateCameraConnection(false)
         stopDetectionMode()
         seekPreview.visibility = View.INVISIBLE
     }
@@ -84,10 +88,12 @@ class CameraFragment : Fragment(),
             setContent {
                 val isDetectionOn by viewModel.inDetectionMode.collectAsState()
                 val isAutoStartOn by viewModel.isAutoStartOn.collectAsState()
+                val isCameraConnected by viewModel.isCameraConnected.collectAsState()
                 ThiefBusterTheme {
                     CameraView(
                         isAutoStartOn = isAutoStartOn,
                         isDetectionOn = isDetectionOn,
+                        isCameraConnected = isCameraConnected,
                         onClick = {
                             if (isDetectionOn) {
                                 stopDetectionMode()
@@ -105,14 +111,37 @@ class CameraFragment : Fragment(),
     override fun onImageAvailable(p0: SeekImage?) {
         lifecycleScope.launch {
             seekImage = p0!!
-            if (viewModel.inDetectionMode.value) {
-                dstBitmap = seekImage.colorBitmap
-                seekImageView.setImageBitmap(dstBitmap)
-                enableBackgroundSegmentationReset = false
-                classifyFrame()
+            if (viewModel.isAutoStartOn.value) {
+                if (viewModel.inDetectionMode.value) {
+                    if (framesSinceLastDetection > 10) {
+                        framesSinceLastDetection = 0
+                        consecutiveFramesWithDetections = 0
+                        stopDetectionMode()
+                        seekImageView.setImageBitmap(seekImage.colorBitmap)
+                        enableBackgroundSegmentationReset = true
+                    } else {
+                        //keep recording
+                        dstBitmap = seekImage.colorBitmap
+                        seekImageView.setImageBitmap(dstBitmap)
+                        enableBackgroundSegmentationReset = false
+                        classifyFrame()
+                    }
+                } else {
+                    //check if can start recording
+                    dstBitmap = seekImage.colorBitmap
+                    enableBackgroundSegmentationReset = false
+                    classifyFrame()
+                }
             } else {
-                seekImageView.setImageBitmap(seekImage.colorBitmap)
-                enableBackgroundSegmentationReset = true
+                if (viewModel.inDetectionMode.value) {
+                    dstBitmap = seekImage.colorBitmap
+                    seekImageView.setImageBitmap(dstBitmap)
+                    enableBackgroundSegmentationReset = false
+                    classifyFrame()
+                } else {
+                    seekImageView.setImageBitmap(seekImage.colorBitmap)
+                    enableBackgroundSegmentationReset = true
+                }
             }
         }
     }
@@ -159,6 +188,7 @@ class CameraFragment : Fragment(),
 
     private fun classifyFrame() {
         frameIndex++
+        framesSinceLastDetection ++
         if (AppSettingsProvider.getDetectPeople()) {
             detectPeople()
         } else {
@@ -255,7 +285,18 @@ class CameraFragment : Fragment(),
         message: String,
         log: String
     ) {
-
+        if (viewModel.isAutoStartOn.value) {
+            framesSinceLastDetection = 0
+            if (!viewModel.inDetectionMode.value) {
+                if (consecutiveFramesWithDetections > 3) {
+                    startDetectionMode()
+                    return
+                } else {
+                    consecutiveFramesWithDetections ++
+                    return
+                }
+            }
+        }
         NativeMethodsProvider.drawRectangle(
             dstBitmap,
             personCluster,

@@ -4,15 +4,22 @@ import android.widget.Chronometer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,6 +31,7 @@ import kotlinx.coroutines.launch
 fun CameraView(
     isAutoStartOn: Boolean,
     isDetectionOn: Boolean,
+    isCameraConnected: Boolean,
     onClick: () -> Unit
 ) {
     var time by remember { mutableStateOf(0) }
@@ -79,7 +87,7 @@ fun CameraView(
             horizontalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = if (isAutoStartOn) Modifier
+                modifier = if (isAutoStartOn || !isCameraConnected) Modifier
                     .clip(RoundedCornerShape(100.dp)) else Modifier
                     .clip(RoundedCornerShape(100.dp))
                     .clickable {
@@ -116,7 +124,9 @@ fun CameraView(
         }
         if (isAutoStartOn) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
@@ -126,6 +136,30 @@ fun CameraView(
                 )
             }
         }
+        if(!isCameraConnected){
+            Row(modifier = Modifier.fillMaxWidth().padding(top=16.dp), horizontalArrangement = Arrangement.Center) {
+                Text(
+                    buildAnnotatedString {
+                        withStyle(style = SpanStyle(
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+                        ) {
+                            append("Please connect your ")
+                        }
+                        withStyle(style = SpanStyle(
+                            color = MaterialTheme.colors.primary,
+                            fontSize = 18.sp
+                        )
+                        ) {
+                            append("Seek Thermal Camera")
+                        }
+                    }
+                )
+
+            }
+        }
+
     }
 }
 
@@ -135,6 +169,7 @@ fun CameraOnPreview() {
     CameraView(
         isAutoStartOn = true,
         isDetectionOn = true,
+        isCameraConnected = true
     ) {}
 }
 
@@ -144,5 +179,6 @@ fun CameraOffPreview() {
     CameraView(
         isAutoStartOn = false,
         isDetectionOn = false,
+        isCameraConnected = false
     ) {}
 }

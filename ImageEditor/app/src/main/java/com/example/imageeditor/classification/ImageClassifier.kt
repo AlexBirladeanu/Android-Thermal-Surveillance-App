@@ -45,7 +45,7 @@ class ImageClassifier(
             var personFound = false
             results?.forEach { classifications ->
                 classifications.categories.forEach {
-                    if (it.label == "body" && it.score > 0.54) {
+                    if (it.label == "body" && it.score > 0.56) {
                         personFound = true
                         message = "Body"
                     }

@@ -212,6 +212,9 @@ private fun RecordingCard(
     recordingWithPhotos.photos.forEach {
         peopleDetected += it.peopleNr
     }
+//    if (peopleDetected == 0) {
+//        onDelete(recordingWithPhotos)
+//    }
     val cardModifier = if (peopleDetected > 0) {
         Modifier
             .background(Color.Black)

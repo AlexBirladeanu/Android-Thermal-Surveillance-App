@@ -26,6 +26,9 @@ class CameraViewModel : ViewModel() {
     private val _isAutoStartOn: MutableStateFlow<Boolean> = MutableStateFlow(AppSettingsProvider.getAutoStart())
     val isAutoStartOn = _isAutoStartOn.asStateFlow()
 
+    private val _isCameraConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isCameraConnected = _isCameraConnected.asStateFlow()
+
     init {
         autoStartChangedEvent.observeForever{
             refreshAutoStart()
@@ -87,6 +90,10 @@ class CameraViewModel : ViewModel() {
                 lastPhotoTimestamp = currentTime
             }
         }
+    }
+
+    fun updateCameraConnection(isConnected: Boolean) {
+        _isCameraConnected.value = isConnected
     }
 
     private fun notifyRecordingsViewModel() {
