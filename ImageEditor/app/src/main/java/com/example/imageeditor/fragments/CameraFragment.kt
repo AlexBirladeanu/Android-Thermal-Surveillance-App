@@ -11,11 +11,15 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.imageeditor.R
 import com.example.imageeditor.classification.ImageClassifier
 import com.example.imageeditor.databinding.FragmentCameraBinding
+import com.example.imageeditor.ui.theme.ThiefBusterTheme
+import com.example.imageeditor.ui.views.CameraView
 import com.example.imageeditor.utils.AppSettingsProvider
 import com.example.imageeditor.utils.NativeMethodsProvider
 import com.example.imageeditor.viewModels.CameraViewModel
@@ -36,12 +40,8 @@ class CameraFragment : Fragment(),
 
     private lateinit var dstBitmap: Bitmap
 
-    private lateinit var logTextView: TextView
-    private lateinit var startButton: Button
-    private lateinit var chronometer: Chronometer
     private lateinit var mediaPlayer: MediaPlayer
 
-    private var inDetectionMode = false
     private var enableBackgroundSegmentationReset = false
     private var frameIndex = 0
     private var colorPaletteIndex = 0
@@ -49,7 +49,6 @@ class CameraFragment : Fragment(),
 
     private lateinit var binding: FragmentCameraBinding
 
-    //    private val viewModel = ViewModelProvider(this)[CameraViewModel::class.java]
     private val viewModel = CameraViewModel()
 
     private val stateCallback: SeekCamera.StateCallback =
@@ -80,19 +79,37 @@ class CameraFragment : Fragment(),
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentCameraBinding.inflate(inflater, container, false)
+        binding.composeView.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val isDetectionOn by viewModel.inDetectionMode.collectAsState()
+                val isAutoStartOn by viewModel.isAutoStartOn.collectAsState()
+                ThiefBusterTheme {
+                    CameraView(
+                        isAutoStartOn = isAutoStartOn,
+                        isDetectionOn = isDetectionOn,
+                        onClick = {
+                            if (isDetectionOn) {
+                                stopDetectionMode()
+                            } else {
+                                startDetectionMode()
+                            }
+                        }
+                    )
+                }
+            }
+        }
         return binding.root
     }
 
     override fun onImageAvailable(p0: SeekImage?) {
         lifecycleScope.launch {
             seekImage = p0!!
-            if (inDetectionMode) {
+            if (viewModel.inDetectionMode.value) {
                 dstBitmap = seekImage.colorBitmap
-
+                seekImageView.setImageBitmap(dstBitmap)
                 enableBackgroundSegmentationReset = false
                 classifyFrame()
-
-                seekImageView.setImageBitmap(dstBitmap)
             } else {
                 seekImageView.setImageBitmap(seekImage.colorBitmap)
                 enableBackgroundSegmentationReset = true
@@ -106,24 +123,12 @@ class CameraFragment : Fragment(),
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
-
-        setupCamera()
-
         val toolbar: androidx.appcompat.widget.Toolbar = binding.toolbar
         toolbar.title = "Camera"
         (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
-        logTextView = binding.log
-        chronometer = binding.chronometer
-        chronometer.visibility = View.GONE
         mediaPlayer = MediaPlayer.create(requireActivity(), R.raw.notification_alert)
-        startButton = binding.startButton
-        startButton.setOnClickListener {
-            if (inDetectionMode) {
-                stopDetectionMode()
-            } else {
-                startDetectionMode()
-            }
-        }
+
+        setupCamera()
     }
 
     private fun setupCamera() {
@@ -141,23 +146,14 @@ class CameraFragment : Fragment(),
     }
 
     private fun startDetectionMode() {
-        inDetectionMode = true
-        startButton.text = "Stop"
         seekPreview.visibility = View.GONE
         seekImageView.visibility = View.VISIBLE
-        chronometer.visibility = View.VISIBLE
-        chronometer.base = SystemClock.elapsedRealtime()
-        chronometer.start()
         viewModel.startRecording()
     }
 
     private fun stopDetectionMode() {
-        inDetectionMode = false
-        startButton.text = "Start"
         seekPreview.visibility = View.VISIBLE
         seekImageView.visibility = View.GONE
-        chronometer.stop()
-        chronometer.visibility = View.GONE
         viewModel.stopRecording()
     }
 
@@ -259,8 +255,6 @@ class CameraFragment : Fragment(),
         message: String,
         log: String
     ) {
-        val newLog = logTextView.text.toString() + log
-        logTextView.text = newLog
 
         NativeMethodsProvider.drawRectangle(
             dstBitmap,
@@ -272,8 +266,6 @@ class CameraFragment : Fragment(),
             lastFrameIndex = frameIndex
         }
         if (lastFrameIndex != frameIndex) {
-            logTextView.text = ""
-
             viewModel.insertPhoto(bitmapToSave, peopleDetected)
             peopleDetected = 0
             if (AppSettingsProvider.getVibrations()) {

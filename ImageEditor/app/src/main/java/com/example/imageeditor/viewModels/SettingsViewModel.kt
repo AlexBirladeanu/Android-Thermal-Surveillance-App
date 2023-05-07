@@ -58,6 +58,7 @@ class SettingsViewModel: ViewModel() {
     fun updateAutoStart(isEnabled: Boolean) {
         _autoStart.value = isEnabled
         AppSettingsProvider.setAutoStart(isEnabled)
+        CameraViewModel.autoStartChangedEvent.postValue(Unit)
     }
 
     fun updateDetectPeople(isEnabled: Boolean) {

@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import androidx.compose.runtime.MutableState
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,6 +18,8 @@ import com.example.imageeditor.database.entity.Recording
 import com.example.imageeditor.utils.AppSettingsProvider
 import com.example.imageeditor.utils.BitmapConverter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.sql.Timestamp
 import kotlin.properties.Delegates
@@ -27,7 +30,21 @@ class CameraViewModel : ViewModel() {
     private lateinit var currentRecording: Recording
     private var lastPhotoTimestamp: Long = 0
 
+    private val _inDetectionMode: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val inDetectionMode = _inDetectionMode.asStateFlow()
+
+    private val _isAutoStartOn: MutableStateFlow<Boolean> = MutableStateFlow(AppSettingsProvider.getAutoStart())
+    val isAutoStartOn = _isAutoStartOn.asStateFlow()
+
+    init {
+        autoStartChangedEvent.observeForever{
+            refreshAutoStart()
+        }
+    }
+
     fun startRecording() {
+        _inDetectionMode.value = true
+
         val currentTime = System.currentTimeMillis()
         viewModelScope.launch(Dispatchers.IO) {
             recordingsDao.insertRecording(
@@ -43,7 +60,12 @@ class CameraViewModel : ViewModel() {
         }
     }
 
+    private fun refreshAutoStart() {
+        _isAutoStartOn.value = AppSettingsProvider.getAutoStart()
+    }
+
     fun stopRecording() {
+        _inDetectionMode.value = false
         val currentTime = System.currentTimeMillis()
         viewModelScope.launch(Dispatchers.IO) {
             recordingsDao.insertRecording(
@@ -79,5 +101,9 @@ class CameraViewModel : ViewModel() {
 
     private fun notifyRecordingsViewModel() {
         RecordingsViewModel.eventLiveData.postValue(Unit)
+    }
+
+    companion object {
+        val autoStartChangedEvent = MutableLiveData<Unit>()
     }
 }
