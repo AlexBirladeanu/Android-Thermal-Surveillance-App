@@ -1,7 +1,5 @@
 package com.example.imageeditor.ui.views
 
-import android.util.Log
-import android.widget.ToggleButton
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -70,12 +68,14 @@ fun SettingsView(
                     .padding(16.dp)
             ) {
                 item {
-                    val isVibrationEnabled = viewModel.isVibrationEnabled.collectAsState()
-                    val isSoundEnabled = viewModel.isSoundEnabled.collectAsState()
-                    val timeBetweenPhotos = viewModel.timeBetweenPhotos.collectAsState()
+                    val isVibrationEnabled by viewModel.isVibrationEnabled.collectAsState()
+                    val isSoundEnabled by viewModel.isSoundEnabled.collectAsState()
+                    val timeBetweenPhotos by viewModel.timeBetweenPhotos.collectAsState()
                     val isBodyMergeEnabled by viewModel.isBodyMergeEnabled.collectAsState()
                     val isAutoStart by viewModel.autoStart.collectAsState()
                     val isDetectPeopleEnabled by viewModel.detectPeople.collectAsState()
+                    val isSaveRecordingsDataEnabled by viewModel.isSaveRecordingsDataEnabled.collectAsState()
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -89,7 +89,7 @@ fun SettingsView(
                             fontSize = 18.sp
                         )
                         Switch(
-                            checked = isVibrationEnabled.value,
+                            checked = isVibrationEnabled,
                             onCheckedChange = {
                                 viewModel.updateVibration(it)
                             },
@@ -114,9 +114,34 @@ fun SettingsView(
                             fontSize = 18.sp
                         )
                         Switch(
-                            checked = isSoundEnabled.value,
+                            checked = isSoundEnabled,
                             onCheckedChange = {
                                 viewModel.updateSoundNotifications(it)
+                            },
+                            colors = switchColors
+                        )
+                    }
+                    Divider(
+                        color = Blue,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 0.5.dp
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Save Recordings Data",
+                            color = textColor,
+                            fontSize = 18.sp
+                        )
+                        Switch(
+                            checked = isSaveRecordingsDataEnabled,
+                            onCheckedChange = {
+                                viewModel.updateSaveRecordingsData(it)
                             },
                             colors = switchColors
                         )
@@ -136,7 +161,7 @@ fun SettingsView(
                             fontSize = 18.sp
                         )
                         TimeBetweenPhotosField(
-                            inputValue = timeBetweenPhotos.value.toString(),
+                            inputValue = timeBetweenPhotos.toString(),
                             onSubmit = {
                                 viewModel.updateTimeBetweenPhotos(it)
                             }

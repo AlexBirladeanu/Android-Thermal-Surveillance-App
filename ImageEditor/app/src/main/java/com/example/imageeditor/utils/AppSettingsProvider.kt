@@ -12,6 +12,7 @@ object AppSettingsProvider {
     private const val KEY_BODY_MERGE_ENABLED = "Enable body merge"
     private const val KEY_AUTO_START = "Start/Stop"
     private const val KEY_DETECT_PEOPLE = "Detection Mode"
+    private const val KEY_SAVE_RECORDINGS_DATA = "Save recordings Data"
 
     private const val DEFAULT_VIBRATIONS_VALUE = true
     private const val DEFAULT_SOUND_NOTIFICATIONS_VALUE = true
@@ -19,6 +20,7 @@ object AppSettingsProvider {
     private const val DEFAULT_BODY_MERGE_ENABLED = false
     private const val DEFAULT_AUTO_START = false
     private const val DEFAULT_DETECT_PEOPLE = true
+    private const val DEFAULT_SAVE_RECORDINGS_DATA_VALUE = true
 
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -68,6 +70,13 @@ object AppSettingsProvider {
         }
     }
 
+    fun setSaveRecordingsData(value: Boolean) {
+        with (sharedPreferences.edit()) {
+            putBoolean(KEY_SAVE_RECORDINGS_DATA, value)
+            apply()
+        }
+    }
+
     fun getVibrations(): Boolean =
         sharedPreferences.getBoolean(KEY_VIBRATIONS, DEFAULT_VIBRATIONS_VALUE)
 
@@ -85,4 +94,7 @@ object AppSettingsProvider {
 
     fun getDetectPeople(): Boolean =
         sharedPreferences.getBoolean(KEY_DETECT_PEOPLE, DEFAULT_DETECT_PEOPLE)
+
+    fun isSaveRecordingsDataEnabled(): Boolean =
+        sharedPreferences.getBoolean(KEY_SAVE_RECORDINGS_DATA, DEFAULT_SAVE_RECORDINGS_DATA_VALUE)
 }

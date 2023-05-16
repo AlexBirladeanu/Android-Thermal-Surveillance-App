@@ -25,6 +25,9 @@ class SettingsViewModel: ViewModel() {
     private val _detectPeople: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val detectPeople = _detectPeople.asStateFlow()
 
+    private val _isSaveRecordingsDataEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isSaveRecordingsDataEnabled = _isSaveRecordingsDataEnabled.asStateFlow()
+
     init {
         _isVibrationEnabled.value = AppSettingsProvider.getVibrations()
         _isSoundEnabled.value = AppSettingsProvider.getSoundNotifications()
@@ -32,6 +35,7 @@ class SettingsViewModel: ViewModel() {
         _isBodyMergeEnabled.value = AppSettingsProvider.isBodyMergeEnabled()
         _autoStart.value = AppSettingsProvider.getAutoStart()
         _detectPeople.value = AppSettingsProvider.getDetectPeople()
+        _isSaveRecordingsDataEnabled.value = AppSettingsProvider.isSaveRecordingsDataEnabled()
     }
 
     fun updateVibration(isEnabled: Boolean) {
@@ -64,5 +68,10 @@ class SettingsViewModel: ViewModel() {
     fun updateDetectPeople(isEnabled: Boolean) {
         _detectPeople.value = isEnabled
         AppSettingsProvider.setDetectPeople(isEnabled)
+    }
+
+    fun updateSaveRecordingsData(isEnabled: Boolean) {
+        _isSaveRecordingsDataEnabled.value = isEnabled
+        AppSettingsProvider.setSaveRecordingsData(isEnabled)
     }
 }

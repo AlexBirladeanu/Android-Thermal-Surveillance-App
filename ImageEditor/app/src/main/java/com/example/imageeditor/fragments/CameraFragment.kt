@@ -28,7 +28,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-
 class CameraFragment : Fragment(),
     SeekImageReader.OnImageAvailableListener {
 
@@ -204,6 +203,7 @@ class CameraFragment : Fragment(),
             enableBackgroundSegmentationReset,
             movementBitmap
         )
+
         if (isMovement) {
             NativeMethodsProvider.enhanceContrast(movementBitmap, movementBitmap)
             val classifier = ImageClassifier(
@@ -216,7 +216,6 @@ class CameraFragment : Fragment(),
                 }
             )
             classifier.classify()
-
         } else {
             var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
             val clustersNr = NativeMethodsProvider.getClusters(
@@ -233,7 +232,7 @@ class CameraFragment : Fragment(),
             }
 
 //        clusterList.forEach {
-//            drawPerson(it, frameIndex, "")
+//            drawRectangle(it, frameIndex, "cluster", "")
 //        }
 
             runBlocking {
@@ -373,11 +372,6 @@ class CameraFragment : Fragment(),
     }
 
     companion object {
-        private const val SEEK_PREVIEW_HEIGHT = 2160
-        private const val SEEK_PREVIEW_WIDTH = 1440
-        private const val RESOLUTION_HEIGHT = 156
-        private const val RESOLUTION_WIDTH = 206
-
         private const val MIN_TIME_BETWEEN_VIBRATIONS = 2000L
 
         private val colorPaletteList: List<SeekCamera.ColorPalette> = listOf(

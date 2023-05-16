@@ -23,14 +23,15 @@ class CameraViewModel : ViewModel() {
     private val _inDetectionMode: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val inDetectionMode = _inDetectionMode.asStateFlow()
 
-    private val _isAutoStartOn: MutableStateFlow<Boolean> = MutableStateFlow(AppSettingsProvider.getAutoStart())
+    private val _isAutoStartOn: MutableStateFlow<Boolean> =
+        MutableStateFlow(AppSettingsProvider.getAutoStart())
     val isAutoStartOn = _isAutoStartOn.asStateFlow()
 
     private val _isCameraConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isCameraConnected = _isCameraConnected.asStateFlow()
 
     init {
-        autoStartChangedEvent.observeForever{
+        autoStartChangedEvent.observeForever {
             refreshAutoStart()
         }
     }
@@ -38,18 +39,20 @@ class CameraViewModel : ViewModel() {
     fun startRecording() {
         _inDetectionMode.value = true
 
-        val currentTime = System.currentTimeMillis()
-        viewModelScope.launch(Dispatchers.IO) {
-            recordingsDao.insertRecording(
-                Recording(
-                    recordingId = null,
-                    startedAt = currentTime,
-                    endedAt = null
+        if (AppSettingsProvider.isSaveRecordingsDataEnabled()) {
+            val currentTime = System.currentTimeMillis()
+            viewModelScope.launch(Dispatchers.IO) {
+                recordingsDao.insertRecording(
+                    Recording(
+                        recordingId = null,
+                        startedAt = currentTime,
+                        endedAt = null
+                    )
                 )
-            )
-            currentRecording =
-                recordingsDao.getAllRecordings().first { it.startedAt == currentTime }
-            notifyRecordingsViewModel()
+                currentRecording =
+                    recordingsDao.getAllRecordings().first { it.startedAt == currentTime }
+                notifyRecordingsViewModel()
+            }
         }
     }
 
@@ -59,35 +62,40 @@ class CameraViewModel : ViewModel() {
 
     fun stopRecording() {
         _inDetectionMode.value = false
-        val currentTime = System.currentTimeMillis()
-        viewModelScope.launch(Dispatchers.IO) {
-            recordingsDao.insertRecording(
-                Recording(
-                    recordingId = currentRecording.recordingId,
-                    startedAt = currentRecording.startedAt,
-                    endedAt = currentTime
+
+        if (AppSettingsProvider.isSaveRecordingsDataEnabled()) {
+            val currentTime = System.currentTimeMillis()
+            viewModelScope.launch(Dispatchers.IO) {
+                recordingsDao.insertRecording(
+                    Recording(
+                        recordingId = currentRecording.recordingId,
+                        startedAt = currentRecording.startedAt,
+                        endedAt = currentTime
+                    )
                 )
-            )
-            notifyRecordingsViewModel()
+                notifyRecordingsViewModel()
+            }
         }
     }
 
     fun insertPhoto(bitmap: Bitmap, peopleNr: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val currentTime = System.currentTimeMillis()
-            val timeBetweenPhotos = currentTime - lastPhotoTimestamp
-            if (timeBetweenPhotos > AppSettingsProvider.getTimeBetweenPhotos()) {
-                val encodedBitmap = BitmapConverter.convertBitmapToString(bitmap)
-                recordingsDao.insertPhoto(
-                    Photo(
-                        id = null,
-                        takenAt = currentTime,
-                        peopleNr = peopleNr,
-                        bitmap = encodedBitmap,
-                        recordingId = currentRecording.recordingId!!
+        if (AppSettingsProvider.isSaveRecordingsDataEnabled()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val currentTime = System.currentTimeMillis()
+                val timeBetweenPhotos = currentTime - lastPhotoTimestamp
+                if (timeBetweenPhotos > AppSettingsProvider.getTimeBetweenPhotos()) {
+                    val encodedBitmap = BitmapConverter.convertBitmapToString(bitmap)
+                    recordingsDao.insertPhoto(
+                        Photo(
+                            id = null,
+                            takenAt = currentTime,
+                            peopleNr = peopleNr,
+                            bitmap = encodedBitmap,
+                            recordingId = currentRecording.recordingId!!
+                        )
                     )
-                )
-                lastPhotoTimestamp = currentTime
+                    lastPhotoTimestamp = currentTime
+                }
             }
         }
     }
