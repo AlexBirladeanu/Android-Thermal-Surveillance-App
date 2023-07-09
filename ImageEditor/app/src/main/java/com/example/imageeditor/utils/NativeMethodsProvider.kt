@@ -14,4 +14,6 @@ object NativeMethodsProvider {
     external fun getClusters(bitmapIn: Bitmap, bitmapOut: Bitmap, getClusterSizeOnly: Boolean = false, enableClusterMerge: Boolean): Int
 
     external fun drawRectangle(bitmapIn: Bitmap, cluster: Bitmap, message: String, bitmapOut: Bitmap)
+
+    external fun backgroundSegmentationDebug(bitmapIn: Bitmap, bitmapOut: Bitmap)
 }

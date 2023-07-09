@@ -114,5 +114,6 @@ object AppSettingsProvider {
 enum class DebugOptionType {
     OFF,
     SHOW_ALL_CLUSTERS,
-    SHOW_FIRST_CLUSTER
+    SHOW_FIRST_CLUSTER,
+    MOTION
 }

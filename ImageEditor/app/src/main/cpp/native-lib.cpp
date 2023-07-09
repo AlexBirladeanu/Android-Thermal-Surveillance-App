@@ -134,9 +134,6 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_backgroundSegmentation(
     bitmapToMat(env, bitmapIn, src, false);
     Mat dst = src.clone();
     bool wasMotionDetected = background_segmentation(src, method, enableReset, dst);
-    if (!wasMotionDetected) {
-        dst = src.clone();
-    }
     matToBitmap(env, dst, bitmapOut, false);
     return wasMotionDetected;
 }
@@ -182,3 +179,15 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_drawRectangle(
     (*env).ReleaseStringUTFChars(messageString, message);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_imageeditor_utils_NativeMethodsProvider_backgroundSegmentationDebug(
+        JNIEnv* env,
+        jobject p_this,
+        jobject bitmapIn,
+        jobject bitmapOut) {
+    Mat src;
+    bitmapToMat(env, bitmapIn, src, false);
+    Mat dst;
+    dst = background_segmentation_debug(src);
+    matToBitmap(env, dst, bitmapOut, false);
+}

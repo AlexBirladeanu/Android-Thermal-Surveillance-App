@@ -306,3 +306,59 @@ bool background_segmentation(Mat frame, int method, bool enableReset, Mat& resul
     result = crop(gray, xMin, xMax, yMin, yMax);
     return isMovement;
 }
+
+Mat background_segmentation_debug(Mat frame) {
+    Mat gray; //current frame: original and gray
+    static Mat backgnd; // background model
+    static Mat diff; //difference image: |frame_gray - bacgnd|
+    static Mat dst; //output image/frame
+    static int frameNum = -1; //current frame counter
+    int method = 3;
+    const unsigned char Th = 15;
+    const double alpha = 0.05;
+    ++frameNum;
+
+    cvtColor(frame, gray, COLOR_BGR2GRAY);
+    GaussianBlur(gray, gray, Size(5, 5), 0, 0);
+    dst = Mat::zeros(gray.size(), gray.type());
+
+    if (frameNum == 0) {
+        backgnd = gray.clone();
+        return frame;
+    }
+
+    const int channels_gray = gray.channels();
+    if (channels_gray > 1) {
+        return frame;
+    }
+    if (frameNum > 0) // daca nu este primul cadru
+    {
+        // Calcul imagine diferenta dintre cadrul current (gray) si fundal (backgnd)
+        absdiff(gray, backgnd, diff);
+
+        if (method == 1) {
+            backgnd = gray.clone();
+        }
+        // Se parcurge sistematic matricea diff
+        for (int i = 0; i < diff.rows; i++) {
+            for (int j = 0; j < diff.cols; j++) {
+                //daca valoarea pt.pixelul current diff.at<uchar>(i, j) > Th
+                // marcheaza pixelul din imaginea destinatie ca obiect:
+                if (diff.at<uchar>(i, j) > Th) {
+                    dst.at<uchar>(i, j) = 255;
+                } else {
+                    // actualizeaza model background (doar pt. metoda 3)
+                    if (method == 3) {
+                        backgnd.at<uchar>(i, j) = alpha * gray.at<uchar>(i, j) +
+                                                  (1.0 - alpha) * backgnd.at<uchar>(i, j);
+                    }
+                }
+            }
+        }
+        Mat element = getStructuringElement(MORPH_CROSS, Size(3, 3));
+        erode(dst, dst, element, Point(-1, -1), 2);
+        dilate(dst, dst, element, Point(-1, -1), 4);
+        erode(dst, dst, element, Point(-1, -1), 2);
+    }
+    return dst;
+}

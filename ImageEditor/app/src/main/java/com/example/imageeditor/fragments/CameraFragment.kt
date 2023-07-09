@@ -264,6 +264,10 @@ class CameraFragment : Fragment(),
                     seekImageView.setImageBitmap(firstCluster)
                 }
             }
+            DebugOptionType.MOTION.ordinal -> {
+                NativeMethodsProvider.backgroundSegmentationDebug(dstBitmap, dstBitmap)
+                seekImageView.setImageBitmap(dstBitmap)
+            }
         }
     }
 

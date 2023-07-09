@@ -13,3 +13,5 @@ bool background_segmentation(Mat frame, int method, bool enableReset, Mat& resul
 std::vector<Mat> getClusters(Mat src, bool enableMerge);
 
 Mat drawClusterRectangle(Mat src, Mat cluster, char* message);
+
+Mat background_segmentation_debug(Mat frame);

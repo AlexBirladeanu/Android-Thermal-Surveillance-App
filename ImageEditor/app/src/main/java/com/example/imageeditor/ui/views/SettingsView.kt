@@ -250,7 +250,7 @@ fun SettingsView(
                             color = textColor,
                             fontSize = 18.sp
                         )
-                        val debugOptions = listOf("Off", "Clusters", "First cluster")
+                        val debugOptions = listOf("Off", "Clusters", "First Cl.", "Motion")
                         ToggleButtons(
                             items = debugOptions,
                             currentSelection = debugOptions[debugOption],
