@@ -157,10 +157,6 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_getClusters(
         bitmapToMat(env, bitmapIn, src, false);
         bool enableMerge = enableClusterMerge;
         clusters = getClusters(src, enableMerge);
-//        if (enableClusterMerge == true) {
-//            std::vector<Mat> clustersWithBodyMerge = mergeBodyClusters(clusters, src);
-//            clusters = clustersWithBodyMerge;
-//        }
         index = 0;
     } else {
         Mat dst = clusters[index++].clone();
@@ -181,10 +177,8 @@ Java_com_example_imageeditor_utils_NativeMethodsProvider_drawRectangle(
     bitmapToMat(env, bitmapIn, src, false);
     bitmapToMat(env, clusterBitmap, cluster, false);
     const char* message = (*env).GetStringUTFChars(messageString, 0);
-
     Mat dst = drawClusterRectangle(src, cluster, (char*)message);
     matToBitmap(env, dst, bitmapOut, false);
-
     (*env).ReleaseStringUTFChars(messageString, message);
 }
 

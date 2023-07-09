@@ -13,6 +13,7 @@ object AppSettingsProvider {
     private const val KEY_AUTO_START = "Start/Stop"
     private const val KEY_DETECT_PEOPLE = "Detection Mode"
     private const val KEY_SAVE_RECORDINGS_DATA = "Save recordings Data"
+    private const val KEY_DEBUG_OPTION = "Debug Option"
 
     private const val DEFAULT_VIBRATIONS_VALUE = true
     private const val DEFAULT_SOUND_NOTIFICATIONS_VALUE = true
@@ -21,6 +22,7 @@ object AppSettingsProvider {
     private const val DEFAULT_AUTO_START = false
     private const val DEFAULT_DETECT_PEOPLE = true
     private const val DEFAULT_SAVE_RECORDINGS_DATA_VALUE = true
+    private val DEFAULT_DEBUG_OPTION = DebugOptionType.OFF.ordinal
 
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -77,6 +79,13 @@ object AppSettingsProvider {
         }
     }
 
+    fun setDebugOption(value: Int) {
+        with (sharedPreferences.edit()) {
+            putInt(KEY_DEBUG_OPTION, value)
+            apply()
+        }
+    }
+
     fun getVibrations(): Boolean =
         sharedPreferences.getBoolean(KEY_VIBRATIONS, DEFAULT_VIBRATIONS_VALUE)
 
@@ -97,4 +106,13 @@ object AppSettingsProvider {
 
     fun isSaveRecordingsDataEnabled(): Boolean =
         sharedPreferences.getBoolean(KEY_SAVE_RECORDINGS_DATA, DEFAULT_SAVE_RECORDINGS_DATA_VALUE)
+
+    fun getDebugOption(): Int =
+        sharedPreferences.getInt(KEY_DEBUG_OPTION, DEFAULT_DEBUG_OPTION)
+}
+
+enum class DebugOptionType {
+    OFF,
+    SHOW_ALL_CLUSTERS,
+    SHOW_FIRST_CLUSTER
 }

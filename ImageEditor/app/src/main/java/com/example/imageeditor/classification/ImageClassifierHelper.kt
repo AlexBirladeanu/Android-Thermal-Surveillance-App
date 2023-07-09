@@ -1,19 +1,3 @@
-/*
- * Copyright 2022 The TensorFlow Authors. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *             http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.imageeditor.classification
 
 import android.content.Context
@@ -30,7 +14,6 @@ import org.tensorflow.lite.task.vision.classifier.Classifications
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 
 class ImageClassifierHelper(
-    //var threshold: Float = 0.83f,
     var threshold: Float = 0.1f,
     var numThreads: Int = 2,
     var maxResults: Int = 1,
@@ -57,7 +40,6 @@ class ImageClassifierHelper(
 
         when (currentDelegate) {
             DELEGATE_CPU -> {
-                // Default
             }
             DELEGATE_GPU -> {
                 if (CompatibilityList().isDelegateSupportedOnThisDevice) {
@@ -73,9 +55,7 @@ class ImageClassifierHelper(
 
         optionsBuilder.setBaseOptions(baseOptionsBuilder.build())
 
-        //val modelName = "thermal_body.tflite"
         val modelName = "model70train.tflite"
-        //val modelName = "optimizedModel2.tflite"
 
         try {
             imageClassifier =
@@ -93,18 +73,12 @@ class ImageClassifierHelper(
             setupImageClassifier()
         }
 
-        // Inference time is the difference between the system time at the start and finish of the
-        // process
         var inferenceTime = SystemClock.uptimeMillis()
 
-        // Create preprocessor for the image.
-        // See https://www.tensorflow.org/lite/inference_with_metadata/
-        //            lite_support#imageprocessor_architecture
         val imageProcessor =
             ImageProcessor.Builder()
                 .build()
 
-        // Preprocess the image and convert it into a TensorImage for classification.
         val tensorImage = imageProcessor.process(TensorImage.fromBitmap(image))
 
         val imageProcessingOptions = ImageProcessingOptions.builder()
@@ -119,8 +93,6 @@ class ImageClassifierHelper(
         )
     }
 
-    // Receive the device rotation (Surface.x values range from 0->3) and return EXIF orientation
-    // http://jpegclub.org/exif_orientation.html
     private fun getOrientationFromRotation(rotation: Int) : ImageProcessingOptions.Orientation {
         when (rotation) {
             Surface.ROTATION_270 ->

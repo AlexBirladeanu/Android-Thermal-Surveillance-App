@@ -28,7 +28,6 @@ class ImageClassifier(
 
     fun classify() {
         imageClassifierHelper?.classify(bitmap, -90)
-
     }
 
     override fun onError(error: String) {
@@ -53,16 +52,9 @@ class ImageClassifier(
                         personFound = true
                         message = "Face"
                     }
-
-
                     log += it.label.toString() + " " + it.score.toString()
-
                 }
             }
-            Log.w(
-                "Clustere",
-                "personFound=$personFound at frame " + frameIndex + " at cluster " + index
-            )
             if (personFound) {
                 drawBitmap(bitmap, frameIndex, message, log)
             }

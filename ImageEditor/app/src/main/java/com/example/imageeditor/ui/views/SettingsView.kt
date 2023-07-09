@@ -75,6 +75,7 @@ fun SettingsView(
                     val isAutoStart by viewModel.autoStart.collectAsState()
                     val isDetectPeopleEnabled by viewModel.detectPeople.collectAsState()
                     val isSaveRecordingsDataEnabled by viewModel.isSaveRecordingsDataEnabled.collectAsState()
+                    val debugOption by viewModel.debugOption.collectAsState()
 
                     Row(
                         modifier = Modifier
@@ -237,6 +238,24 @@ fun SettingsView(
                             isBodyMergeEnabled = isBodyMergeEnabled,
                             onClick = {
                                 viewModel.updateIsBodyMergeEnabled(it)
+                            }
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            text = "Debug Option",
+                            color = textColor,
+                            fontSize = 18.sp
+                        )
+                        val debugOptions = listOf("Off", "Clusters", "First cluster")
+                        ToggleButtons(
+                            items = debugOptions,
+                            currentSelection = debugOptions[debugOption],
+                            onChange = { index ->
+                                viewModel.updateDebugOption(index)
                             }
                         )
                     }

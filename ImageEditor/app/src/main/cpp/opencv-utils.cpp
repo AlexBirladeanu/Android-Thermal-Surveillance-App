@@ -25,7 +25,6 @@ Mat color2Grayscale(Mat src) {
 
 Mat crop(Mat src, int xMin, int xMax, int yMin, int yMax) {
     Mat dst = src.clone();
-
     for (int i = 0; i < dst.rows; i++) {
         for (int j = 0; j < dst.cols; j++) {
             if (j < xMin || j > xMax || i < yMin || i > yMax) {
@@ -33,7 +32,6 @@ Mat crop(Mat src, int xMin, int xMax, int yMin, int yMax) {
             }
         }
     }
-
     return dst;
 }
 
@@ -48,9 +46,8 @@ Mat drawRectangle(Mat src, Point topLeft, Point bottomRight, char *message) {
 Mat drawClusterRectangle(Mat frame, Mat cluster, char* message) {
     Mat gray;
     cvtColor(cluster, gray, COLOR_BGR2GRAY);
-    Mat bw;//binary
+    Mat bw;
     threshold(gray, bw, 0, 255, THRESH_BINARY | THRESH_OTSU);
-
     int xMin = bw.cols - 1;
     int xMax = 1;
     int yMin = bw.rows - 1;
@@ -58,7 +55,6 @@ Mat drawClusterRectangle(Mat frame, Mat cluster, char* message) {
     for (int i = 0; i < bw.rows; i++) {
         for (int j = 0; j < bw.cols; j++) {
             if (bw.at<uchar>(i, j) == 255) {
-                //__android_log_print(ANDROID_LOG_WARN,"letsgoo", "found white at i=%d and j=%d", i, j);
                 if (i < yMin) {
                     yMin = i;
                 }
@@ -86,130 +82,9 @@ Mat drawClusterRectangle(Mat frame, Mat cluster, char* message) {
     if (yMax > 150) {
         yMax = 150;
     }
-
     Point topLeft(xMin, yMin);
     Point bottomRight(xMax, yMax);
-
-    //return bw;
     return drawRectangle(frame, topLeft, bottomRight, message);
-}
-
-vector<Mat> mergeBodyClusters(vector<Mat> originalClusters, Mat originalFrame) {
-
-
-    vector<int> xMinVector;
-    vector<int> xMaxVector;
-    vector<int> yMinVector;
-    vector<int> yMaxVector;
-
-    for (auto &cluster: originalClusters) {
-
-        Mat bw;//binary
-        threshold(cluster, bw, 0, 255, THRESH_BINARY | THRESH_OTSU);
-
-        int xMin = bw.cols - 1;
-        int xMax = 1;
-        int yMin = bw.rows - 1;
-        int yMax = 1;
-        for (int i = 0; i < bw.rows; i++) {
-            for (int j = 0; j < bw.cols; j++) {
-                if (bw.at<uchar>(i, j) == 255) {
-                    if (i < yMin) {
-                        yMin = i;
-                    }
-                    if (i > yMax) {
-                        yMax = i;
-                    }
-                    if (j < xMin) {
-                        xMin = j;
-                    }
-                    if (j > xMax) {
-                        xMax = j;
-                    }
-                }
-            }
-        }
-        if (xMin < 5) {
-            xMin = 5;
-        }
-        if (yMin < 5) {
-            yMin = 5;
-        }
-        if (xMax > 200) {
-            xMax = 200;
-        }
-        if (yMax > 150) {
-            yMax = 150;
-        }
-        xMinVector.push_back(xMin);
-        xMaxVector.push_back(xMax);
-        yMinVector.push_back(yMin);
-        yMaxVector.push_back(yMax);
-    }
-
-
-    vector<int> alreadyVerifiedIndexes;
-    vector<Mat> newClusters;
-
-    Mat grayscaleFrame;
-    cvtColor(originalFrame, grayscaleFrame, COLOR_BGR2GRAY);
-
-    for (int i=0; i<originalClusters.size(); i++) {
-        bool isAlreadyVerified = false;
-        for (auto &index: alreadyVerifiedIndexes) {
-            if (index == i) {
-                isAlreadyVerified = true;
-            }
-        }
-        if (isAlreadyVerified) {
-            continue;
-        }
-
-        int mergedClusterXMin = xMinVector[i];
-        int mergedClusterXMax = xMaxVector[i];
-        int mergedClusterYMin = yMinVector[i];
-        int mergedClusterYMax = yMaxVector[i];
-        for (int j=0; j<originalClusters.size(); j++) {
-            if (i == j) {
-                continue;
-            }
-            //merge lower body cluster with upper body cluster
-            //if (yMinVector[j] >= yMinVector[i]) { //second cluster is below the first
-                if ((xMinVector[j] >= xMinVector[i] - (xMaxVector[i] - xMinVector[i]) / 2) || (xMaxVector[j] <= xMaxVector[i] + (xMaxVector[i] - xMinVector[i]) / 2)) {
-                    if (mergedClusterXMin < xMinVector[j]) {
-                        mergedClusterXMin = xMinVector[j];
-                    }
-                    if (mergedClusterXMax < xMaxVector[j]) {
-                        mergedClusterXMax = xMaxVector[j];
-                    }
-                    if (mergedClusterYMin < yMinVector[j]) {
-                        mergedClusterYMin = yMinVector[j];
-                    }
-                    if (mergedClusterYMax < yMaxVector[j]) {
-                        mergedClusterYMax = yMaxVector[j];
-                    }
-                    alreadyVerifiedIndexes.push_back(j);
-                    alreadyVerifiedIndexes.push_back(i);
-                }
-            }
-        //}
-
-        for (auto &index: alreadyVerifiedIndexes) {
-            if (index == i) {
-                isAlreadyVerified = true;
-            }
-        }
-        if (!isAlreadyVerified) {
-            //keep original cluster
-            newClusters.push_back(originalClusters[i]);
-        } else {
-            //add resulting cluster
-            newClusters.push_back(crop(grayscaleFrame, mergedClusterXMin, mergedClusterXMax, mergedClusterYMin, mergedClusterYMax));
-        }
-
-    }
-
-    return newClusters;
 }
 
 vector<Mat> getClusters(Mat src, bool enableMerge) {
@@ -275,7 +150,6 @@ vector<Mat> getClusters(Mat src, bool enableMerge) {
             }
         }
 
-        //check that min and max coordinates are inside the image
         if (xMin < 5) {
             xMin = 5;
         }
@@ -298,7 +172,6 @@ vector<Mat> getClusters(Mat src, bool enableMerge) {
             } else {
                 bool wasMergedAtLeastOnce = false;
                 for (int j=0; j<clusters.size(); j++) {
-                    //if ((yMax - yMin) / 2 <= (yMaxVector[j] - yMinVector[j]) / 2) {//if gravity center of current cluster is below gravity center of another cluster
                     int halfOfClusterWidth = (xMaxVector[j] - xMinVector[j]) / 2;
                     if (xMax > xMinVector[j] - halfOfClusterWidth || xMin < xMaxVector[j] + halfOfClusterWidth) {
                         if (xMin < xMinVector[j]) {
@@ -313,7 +186,6 @@ vector<Mat> getClusters(Mat src, bool enableMerge) {
                         wasMergedAtLeastOnce = true;
                         clusters[j] = crop(gray, xMinVector[j], xMaxVector[j], yMinVector[j], yMaxVector[j]);
                     }
-                    //}
                 }
                 if (!wasMergedAtLeastOnce) {
                     xMinVector.push_back(xMin);
@@ -329,8 +201,6 @@ vector<Mat> getClusters(Mat src, bool enableMerge) {
 }
 
 bool background_segmentation(Mat frame, int method, bool enableReset, Mat& result) {
-    __android_log_print(ANDROID_LOG_WARN,"Reparatii", "background_segmentation");
-
     Mat gray; //current frame: original and gray
     static Mat backgnd; // background model
     static Mat diff; //difference image: |frame_gray - bacgnd|
@@ -433,8 +303,6 @@ bool background_segmentation(Mat frame, int method, bool enableReset, Mat& resul
         yMin = frame.rows;
         yMax = 0;
     }
-    //return crop(frame, xMin, xMax, yMin, yMax);
-    //return dst;
     result = crop(gray, xMin, xMax, yMin, yMax);
     return isMovement;
 }

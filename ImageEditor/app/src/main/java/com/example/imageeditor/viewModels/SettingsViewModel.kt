@@ -28,6 +28,9 @@ class SettingsViewModel: ViewModel() {
     private val _isSaveRecordingsDataEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isSaveRecordingsDataEnabled = _isSaveRecordingsDataEnabled.asStateFlow()
 
+    private val _debugOption: MutableStateFlow<Int> = MutableStateFlow(0)
+    val debugOption = _debugOption.asStateFlow()
+
     init {
         _isVibrationEnabled.value = AppSettingsProvider.getVibrations()
         _isSoundEnabled.value = AppSettingsProvider.getSoundNotifications()
@@ -36,6 +39,7 @@ class SettingsViewModel: ViewModel() {
         _autoStart.value = AppSettingsProvider.getAutoStart()
         _detectPeople.value = AppSettingsProvider.getDetectPeople()
         _isSaveRecordingsDataEnabled.value = AppSettingsProvider.isSaveRecordingsDataEnabled()
+        _debugOption.value = AppSettingsProvider.getDebugOption()
     }
 
     fun updateVibration(isEnabled: Boolean) {
@@ -73,5 +77,10 @@ class SettingsViewModel: ViewModel() {
     fun updateSaveRecordingsData(isEnabled: Boolean) {
         _isSaveRecordingsDataEnabled.value = isEnabled
         AppSettingsProvider.setSaveRecordingsData(isEnabled)
+    }
+
+    fun updateDebugOption(option: Int) {
+        _debugOption.value = option
+        AppSettingsProvider.setDebugOption(option)
     }
 }

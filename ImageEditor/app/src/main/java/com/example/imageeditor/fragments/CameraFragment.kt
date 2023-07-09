@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaPlayer
 import android.os.*
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,7 @@ import com.example.imageeditor.databinding.FragmentCameraBinding
 import com.example.imageeditor.ui.theme.ThiefBusterTheme
 import com.example.imageeditor.ui.views.CameraView
 import com.example.imageeditor.utils.AppSettingsProvider
+import com.example.imageeditor.utils.DebugOptionType
 import com.example.imageeditor.utils.NativeMethodsProvider
 import com.example.imageeditor.viewModels.CameraViewModel
 import com.thermal.seekware.*
@@ -43,6 +45,7 @@ class CameraFragment : Fragment(),
 
     private var enableBackgroundSegmentationReset = false
     private var frameIndex = 0
+    private var totalDetections = 0
     private var colorPaletteIndex = 0
     private var lastVibrationTimestamp = 0L
     private var framesSinceLastDetection = 0
@@ -187,7 +190,7 @@ class CameraFragment : Fragment(),
 
     private fun classifyFrame() {
         frameIndex++
-        framesSinceLastDetection ++
+        framesSinceLastDetection++
         if (AppSettingsProvider.getDetectPeople()) {
             detectPeople()
         } else {
@@ -199,62 +202,66 @@ class CameraFragment : Fragment(),
         val movementBitmap = dstBitmap.copy(dstBitmap.config, true)
         val isMovement = NativeMethodsProvider.backgroundSegmentation(
             movementBitmap,
-            2,
+            1,
             enableBackgroundSegmentationReset,
             movementBitmap
         )
 
+        var sourceBitmap: Bitmap
         if (isMovement) {
-            NativeMethodsProvider.enhanceContrast(movementBitmap, movementBitmap)
-            val classifier = ImageClassifier(
-                i = 0,
-                bitmap = movementBitmap,
-                fragmentActivity = requireActivity(),
-                frameIndex = frameIndex,
-                drawBitmap = { bitmap, frameIndex, message, log ->
-                    drawRectangle(bitmap, frameIndex, message, log)
-                }
-            )
-            classifier.classify()
+            sourceBitmap = movementBitmap
         } else {
-            var newCluster: Bitmap = dstBitmap.copy(dstBitmap.config, true)
-            val clustersNr = NativeMethodsProvider.getClusters(
-                newCluster,
-                newCluster,
-                true,
-                AppSettingsProvider.isBodyMergeEnabled()
-            )
-            val clusterList: MutableList<Bitmap> = mutableListOf()
-            for (i in 0 until clustersNr) {
-                newCluster = dstBitmap.copy(dstBitmap.config, true)
-                NativeMethodsProvider.getClusters(newCluster, newCluster, false, false)
-                clusterList.add(newCluster)
-            }
-
-//        clusterList.forEach {
-//            drawRectangle(it, frameIndex, "cluster", "")
-//        }
-
-            runBlocking {
-                val jobs = mutableListOf<Job>()
-                clusterList.forEachIndexed { index, bitmap ->
-                    val job = launch {
-                        NativeMethodsProvider.enhanceContrast(bitmap, bitmap)
-                        val classifier = ImageClassifier(
-                            i = index,
-                            bitmap = bitmap,
-                            fragmentActivity = requireActivity(),
-                            frameIndex = frameIndex,
-                            drawBitmap = { bitmap, frameIndex, message, log ->
-                                drawRectangle(bitmap, frameIndex, message, log)
-                            }
-                        )
-                        classifier.classify()
+            sourceBitmap = dstBitmap
+        }
+        var newCluster: Bitmap = sourceBitmap.copy(sourceBitmap.config, true)
+        val clustersNr = NativeMethodsProvider.getClusters(
+            newCluster,
+            newCluster,
+            true,
+            AppSettingsProvider.isBodyMergeEnabled()
+        )
+        val clusterList: MutableList<Bitmap> = mutableListOf()
+        for (i in 0 until clustersNr) {
+            newCluster = sourceBitmap.copy(sourceBitmap.config, true)
+            NativeMethodsProvider.getClusters(newCluster, newCluster, false, false)
+            clusterList.add(newCluster)
+        }
+        when (AppSettingsProvider.getDebugOption()) {
+            DebugOptionType.OFF.ordinal -> {
+                runBlocking {
+                    val jobs = mutableListOf<Job>()
+                    clusterList.forEachIndexed { index, bitmap ->
+                        val job = launch {
+                            NativeMethodsProvider.enhanceContrast(bitmap, bitmap)
+                            val classifier = ImageClassifier(
+                                i = index,
+                                bitmap = bitmap,
+                                fragmentActivity = requireActivity(),
+                                frameIndex = frameIndex,
+                                drawBitmap = { bitmap, frameIndex, message, log ->
+                                    drawRectangle(bitmap, frameIndex, message, log)
+                                }
+                            )
+                            classifier.classify()
+                        }
+                        jobs.add(job)
                     }
-                    jobs.add(job)
+                    jobs.forEach {
+                        it.join()
+                    }
                 }
-                jobs.forEach {
-                    it.join()
+            }
+            DebugOptionType.SHOW_ALL_CLUSTERS.ordinal -> {
+                clusterList.forEach {
+                    drawRectangle(it, frameIndex, "Cluster", "Cluster")
+                }
+            }
+            DebugOptionType.SHOW_FIRST_CLUSTER.ordinal -> {
+                if (clusterList.isNotEmpty()) {
+                    val firstCluster = clusterList.first()
+                    NativeMethodsProvider.enhanceContrast(firstCluster, firstCluster)
+                    dstBitmap = firstCluster
+                    seekImageView.setImageBitmap(firstCluster)
                 }
             }
         }
@@ -291,7 +298,7 @@ class CameraFragment : Fragment(),
                     startDetectionMode()
                     return
                 } else {
-                    consecutiveFramesWithDetections ++
+                    consecutiveFramesWithDetections++
                     return
                 }
             }
@@ -302,6 +309,9 @@ class CameraFragment : Fragment(),
             message,
             dstBitmap
         )
+        totalDetections++
+//        Log.e("Validation Testing", "total number of frames=$frameIndex")
+//        Log.e("Validation Testing", "total number of detections=$totalDetections")
         if (lastFrameIndex == -1) {
             lastFrameIndex = frameIndex
         }
