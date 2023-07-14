@@ -275,7 +275,7 @@ class CameraFragment : Fragment(),
         val movementBitmap = dstBitmap.copy(dstBitmap.config, true)
         val isMovement = NativeMethodsProvider.backgroundSegmentation(
             movementBitmap,
-            1,
+            3,
             enableBackgroundSegmentationReset,
             movementBitmap
         )
