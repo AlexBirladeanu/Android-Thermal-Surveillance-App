@@ -1,7 +1,8 @@
 # Detecting People in Thermal Imaging
 
 This app uses a Tensorflow trained image classifier ro actively detect people's faces or bodies in the stream of images captured from the Seek camera connected to the phone via the usb type c port.
-A Seek portable camera because due to its open source sdk. The user can record a video for surveillance purposes. During the recording, all photos which cintain people are saved in the app's database
+A Seek portable camera is used due to its open source sdk. Also, the image is processed and split intro regions of interest through the OpenCV SDK which is connected to the kotlin environment through the Java
+Native Interface and the android NDK. The user can record a video for surveillance purposes. During the recording, all photos which cintain people are saved in the app's database
 and can be later viewed or deleted. The user can modify preferences in the app such as sound, vibrations or the limit of the number of photos captured.
 
 <img width="587" alt="image" src="https://github.com/AlexBirladeanu/Android-Thermal-Surveillance-App/assets/76782955/4b33ab08-f165-45ee-808c-a772192932ae"> 
